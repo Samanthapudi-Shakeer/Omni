@@ -20,9 +20,9 @@ from .semgrep_runner import run_semgrep
 from .sonarqube_runner import run_sonarqube
 from .commands_library import COMMANDS
 
-app = FastAPI(title="Remote Aider Console")
+legacy_app = FastAPI(title="Coaider Console API")
 
-app.add_middleware(
+legacy_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
@@ -132,12 +132,12 @@ class RawInputBody(BaseModel):
 
 
 # --------------------------------------------------------------------------- workspaces
-@app.get("/api/workspaces", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/workspaces", dependencies=[Depends(check_auth)])
 async def list_workspaces():
     return {"workspaces": wsm.list_workspaces()}
 
 
-@app.post("/api/workspaces", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/workspaces", dependencies=[Depends(check_auth)])
 async def create_workspace(body: CreateWorkspaceBody):
     try:
         return wsm.create_workspace(body.name.strip())
@@ -145,13 +145,13 @@ async def create_workspace(body: CreateWorkspaceBody):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.get("/api/commands", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/commands", dependencies=[Depends(check_auth)])
 async def get_commands():
     return {"commands": COMMANDS}
 
 
 # --------------------------------------------------------------------------- status
-@app.get("/api/ws/{name}/status", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/status", dependencies=[Depends(check_auth)])
 async def get_status(name: str):
     session = get_session(name)
     ollama = await get_ollama_models(settings.ollama_api_base)
@@ -166,7 +166,7 @@ async def get_status(name: str):
     }
 
 
-@app.get("/api/ollama/models", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ollama/models", dependencies=[Depends(check_auth)])
 async def ollama_models():
     result = await get_ollama_models(settings.ollama_api_base)
     if not result["connected"]:
@@ -175,7 +175,7 @@ async def ollama_models():
 
 
 # --------------------------------------------------------------------------- uploads
-@app.post("/api/ws/{name}/upload", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/upload", dependencies=[Depends(check_auth)])
 async def upload_files(name: str, files: List[UploadFile] = File(...)):
     workspace_path = wsm.workspace_path(name)
     if not files:
@@ -212,7 +212,7 @@ async def upload_files(name: str, files: List[UploadFile] = File(...)):
 
 
 # --------------------------------------------------------------------------- files
-@app.get("/api/ws/{name}/files/workspace", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/files/workspace", dependencies=[Depends(check_auth)])
 async def workspace_files(name: str):
     try:
         workspace_path = wsm.workspace_path(name)
@@ -222,12 +222,12 @@ async def workspace_files(name: str):
         raise HTTPException(status_code=500, detail=f"Could not list workspace files: {exc}")
 
 
-@app.get("/api/ws/{name}/files/attached", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/files/attached", dependencies=[Depends(check_auth)])
 async def attached_files(name: str):
     return {"files": get_session(name).get_status()["attachedFiles"]}
 
 
-@app.get("/api/ws/{name}/files/download/{file_path:path}", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/files/download/{file_path:path}", dependencies=[Depends(check_auth)])
 async def download_file(name: str, file_path: str):
     workspace_path = wsm.workspace_path(name)
     try:
@@ -239,7 +239,7 @@ async def download_file(name: str, file_path: str):
     return FileResponse(abs_path, filename=abs_path.name, media_type="application/octet-stream")
 
 
-@app.get("/api/ws/{name}/files/raw/{file_path:path}", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/files/raw/{file_path:path}", dependencies=[Depends(check_auth)])
 async def read_raw_file(name: str, file_path: str):
     """Current on-disk content of a file (not a specific git commit) --
     used to preview things like existing CI/CD config files."""
@@ -257,7 +257,7 @@ async def read_raw_file(name: str, file_path: str):
     return {"content": content}
 
 
-@app.post("/api/ws/{name}/files/add", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/files/add", dependencies=[Depends(check_auth)])
 async def add_file(name: str, body: PathBody):
     session = get_session(name)
     try:
@@ -268,7 +268,7 @@ async def add_file(name: str, body: PathBody):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/files/drop", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/files/drop", dependencies=[Depends(check_auth)])
 async def drop_file(name: str, body: PathBody):
     try:
         get_session(name).drop_file(body.path)
@@ -278,7 +278,7 @@ async def drop_file(name: str, body: PathBody):
 
 
 # --------------------------------------------------------------------------- native commands
-@app.post("/api/ws/{name}/aider/clear", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/clear", dependencies=[Depends(check_auth)])
 async def clear_chat(name: str):
     try:
         get_session(name).clear_chat()
@@ -287,7 +287,7 @@ async def clear_chat(name: str):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/aider/tokens", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/tokens", dependencies=[Depends(check_auth)])
 async def request_tokens(name: str):
     try:
         get_session(name).request_tokens()
@@ -296,17 +296,17 @@ async def request_tokens(name: str):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.get("/api/ws/{name}/history", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/history", dependencies=[Depends(check_auth)])
 async def get_history(name: str):
     return {"history": get_session(name).get_history()}
 
 
-@app.get("/api/ws/{name}/files/versions/{file_path:path}", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/files/versions/{file_path:path}", dependencies=[Depends(check_auth)])
 async def get_file_versions(name: str, file_path: str):
     return {"versions": get_session(name).get_file_versions(file_path)}
 
 
-@app.get("/api/ws/{name}/files/content-at/{file_path:path}", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/files/content-at/{file_path:path}", dependencies=[Depends(check_auth)])
 async def get_file_content_at(name: str, file_path: str, commit: str):
     content = get_session(name).get_file_content_at(file_path, commit)
     if content is None:
@@ -314,7 +314,7 @@ async def get_file_content_at(name: str, file_path: str, commit: str):
     return {"content": content}
 
 
-@app.post("/api/ws/{name}/aider/undo", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/undo", dependencies=[Depends(check_auth)])
 async def undo_last(name: str):
     try:
         get_session(name).undo_last()
@@ -323,7 +323,7 @@ async def undo_last(name: str):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/aider/mode", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/mode", dependencies=[Depends(check_auth)])
 async def set_mode(name: str, body: ModeBody):
     if body.mode not in ("ask", "code", "architect"):
         raise HTTPException(status_code=400, detail="Mode must be ask, code, or architect")
@@ -334,7 +334,7 @@ async def set_mode(name: str, body: ModeBody):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/aider/model", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/model", dependencies=[Depends(check_auth)])
 async def set_model(name: str, body: ModelBody):
     if not body.model:
         raise HTTPException(status_code=400, detail="model is required")
@@ -345,7 +345,7 @@ async def set_model(name: str, body: ModelBody):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/aider/prompt", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/prompt", dependencies=[Depends(check_auth)])
 async def send_prompt(name: str, body: PromptBody):
     if not body.text or not body.text.strip():
         raise HTTPException(status_code=400, detail="Prompt text is required")
@@ -359,7 +359,7 @@ async def send_prompt(name: str, body: PromptBody):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/aider/command", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/command", dependencies=[Depends(check_auth)])
 async def run_command(name: str, body: CommandBody):
     """Generic pass-through for any native Aider command (used by the
     command palette for entries with no dedicated endpoint)."""
@@ -372,7 +372,7 @@ async def run_command(name: str, body: CommandBody):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/aider/answer", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/answer", dependencies=[Depends(check_auth)])
 async def answer_question(name: str, body: AnswerBody):
     try:
         get_session(name).answer_question(body.text)
@@ -382,7 +382,7 @@ async def answer_question(name: str, body: AnswerBody):
 
 
 # --------------------------------------------------------------------------- supervised task lifecycle
-@app.post("/api/ws/{name}/task/start", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/task/start", dependencies=[Depends(check_auth)])
 async def start_task(name: str, body: TaskBody):
     try:
         return get_session(name).start_task(body.text, body.files)
@@ -390,7 +390,7 @@ async def start_task(name: str, body: TaskBody):
         raise HTTPException(status_code=409, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/task/stop", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/task/stop", dependencies=[Depends(check_auth)])
 async def stop_task(name: str):
     try:
         get_session(name).stop_task()
@@ -400,7 +400,7 @@ async def stop_task(name: str):
 
 
 # --------------------------------------------------------------------------- static analysis (pylint, direct -- no Aider)
-@app.post("/api/ws/{name}/lint/analyze", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/lint/analyze", dependencies=[Depends(check_auth)])
 async def lint_analyze(name: str, body: LintAnalyzeBody):
     """Run only a static analyzer; no LLM or Aider is involved."""
     if body.engine not in ("semgrep", "pylint", "sonarqube"):
@@ -416,7 +416,7 @@ async def lint_analyze(name: str, body: LintAnalyzeBody):
     return result
 
 
-@app.post("/api/ws/{name}/lint/autofix", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/lint/autofix", dependencies=[Depends(check_auth)])
 async def lint_autofix(name: str, body: LintAutofixBody):
     """Auto-fix, powered directly by Ollama -- NOT Aider. Re-runs pylint,
     builds an instruction from the findings, sends the whole file to Ollama,
@@ -461,7 +461,7 @@ async def lint_autofix(name: str, body: LintAutofixBody):
     return result
 
 
-@app.post("/api/ws/{name}/lint/explain", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/lint/explain", dependencies=[Depends(check_auth)])
 async def lint_explain(name: str, body: FindingBody):
     """Ask Ollama about one finding only; never sends a whole lint report."""
     model = body.model or get_session(name).status.model
@@ -476,7 +476,7 @@ async def lint_explain(name: str, body: FindingBody):
     return {"explanation": result["text"], "model": result["model"]}
 
 
-@app.post("/api/ws/{name}/lint/fix-finding", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/lint/fix-finding", dependencies=[Depends(check_auth)])
 async def lint_fix_finding(name: str, body: FindingBody):
     """Fix one finding in an isolated Aider session and commit its review copy."""
     workspace_path = wsm.workspace_path(name)
@@ -502,7 +502,7 @@ async def lint_fix_finding(name: str, body: FindingBody):
     return result
 
 
-@app.get("/api/ws/{name}/lint/pylint-report.pdf", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/lint/pylint-report.pdf", dependencies=[Depends(check_auth)])
 async def pylint_report_pdf(name: str, path: str):
     report = run_pylint(wsm.workspace_path(name), path)
     if report["error"]:
@@ -568,7 +568,7 @@ async def _run_tool_task(name: str, purpose: str, path: str, prompt: str, paths:
 
 
 # --------------------------------------------------------------------------- modularization (via Aider, isolated session)
-@app.post("/api/ws/{name}/tasks/modularize", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/tasks/modularize", dependencies=[Depends(check_auth)])
 async def task_modularize(name: str, body: ModularizeBody):
     """Modularization goes through Aider -- but a dedicated hidden session
     for this workspace, completely separate from the visible Aider Console
@@ -577,7 +577,7 @@ async def task_modularize(name: str, body: ModularizeBody):
 
 
 # --------------------------------------------------------------------------- test generation (via Aider, isolated session)
-@app.post("/api/ws/{name}/tasks/testgen", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/tasks/testgen", dependencies=[Depends(check_auth)])
 async def task_testgen(name: str, body: TestGenBody):
     """Test generation also goes through Aider, via its own dedicated hidden
     session (separate from both the console and the modularize session).
@@ -586,7 +586,7 @@ async def task_testgen(name: str, body: TestGenBody):
     return await _run_tool_task(name, "testgen", body.path, prompt, body.paths)
 
 
-@app.get("/api/ws/{name}/tasks/{purpose}/status", dependencies=[Depends(check_auth)])
+@legacy_app.get("/api/ws/{name}/tasks/{purpose}/status", dependencies=[Depends(check_auth)])
 async def tool_task_status(name: str, purpose: str):
     """Polling endpoint for the hidden tool sessions. The visible console
     socket is intentionally separate, so Modularization and Test Generation
@@ -602,7 +602,7 @@ async def tool_task_status(name: str, purpose: str):
     return status
 
 
-@app.post("/api/ws/{name}/tasks/{purpose}/raw", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/tasks/{purpose}/raw", dependencies=[Depends(check_auth)])
 async def tool_task_raw(name: str, purpose: str, body: RawInputBody):
     if purpose not in ("modularize", "testgen", "lintfix"):
         raise HTTPException(status_code=400, detail="Unknown tool session.")
@@ -614,7 +614,7 @@ async def tool_task_raw(name: str, purpose: str, body: RawInputBody):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/tasks/{purpose}/prompt", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/tasks/{purpose}/prompt", dependencies=[Depends(check_auth)])
 async def tool_task_prompt(name: str, purpose: str, body: PromptBody):
     if purpose not in ("modularize", "testgen", "lintfix"):
         raise HTTPException(status_code=400, detail="Unknown tool session.")
@@ -625,7 +625,7 @@ async def tool_task_prompt(name: str, purpose: str, body: PromptBody):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/tasks/{purpose}/clear", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/tasks/{purpose}/clear", dependencies=[Depends(check_auth)])
 async def tool_task_clear(name: str, purpose: str):
     try:
         wsm.get_tool_session(name, purpose).clear_chat()
@@ -634,7 +634,7 @@ async def tool_task_clear(name: str, purpose: str):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/tasks/{purpose}/tokens", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/tasks/{purpose}/tokens", dependencies=[Depends(check_auth)])
 async def tool_task_tokens(name: str, purpose: str):
     try:
         wsm.get_tool_session(name, purpose).request_tokens()
@@ -643,7 +643,7 @@ async def tool_task_tokens(name: str, purpose: str):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/tasks/{purpose}/answer", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/tasks/{purpose}/answer", dependencies=[Depends(check_auth)])
 async def tool_task_answer(name: str, purpose: str, body: AnswerBody):
     if purpose not in ("modularize", "testgen", "lintfix"):
         raise HTTPException(status_code=400, detail="Unknown tool session.")
@@ -654,7 +654,7 @@ async def tool_task_answer(name: str, purpose: str, body: AnswerBody):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/api/ws/{name}/tasks/{purpose}/undo", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/tasks/{purpose}/undo", dependencies=[Depends(check_auth)])
 async def task_undo(name: str, purpose: str):
     if purpose not in ("modularize", "testgen", "lintfix"):
         raise HTTPException(status_code=400, detail="Unknown tool session.")
@@ -670,7 +670,7 @@ async def task_undo(name: str, purpose: str):
 
 
 
-@app.post("/api/ws/{name}/files/write", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/files/write", dependencies=[Depends(check_auth)])
 async def write_file(name: str, body: WriteFileBody):
     """Writes content directly to a workspace file -- used to save output
     from any of the three Ollama-direct tools above. Bypasses Aider
@@ -689,7 +689,7 @@ async def write_file(name: str, body: WriteFileBody):
 
 
 # --------------------------------------------------------------------------- lifecycle
-@app.post("/api/ws/{name}/aider/start", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/start", dependencies=[Depends(check_auth)])
 async def start_aider(name: str):
     try:
         return get_session(name).start()
@@ -699,14 +699,14 @@ async def start_aider(name: str):
         raise HTTPException(status_code=500, detail=f"Could not start Aider: {exc}")
 
 
-@app.post("/api/ws/{name}/aider/stop", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/stop", dependencies=[Depends(check_auth)])
 async def stop_aider(name: str):
     session = get_session(name)
     session.stop()
     return session.get_status()
 
 
-@app.post("/api/ws/{name}/aider/restart", dependencies=[Depends(check_auth)])
+@legacy_app.post("/api/ws/{name}/aider/restart", dependencies=[Depends(check_auth)])
 async def restart_aider(name: str):
     try:
         return await get_session(name).restart()
@@ -715,7 +715,7 @@ async def restart_aider(name: str):
 
 
 # --------------------------------------------------------------------------- websocket
-@app.websocket("/ws/{name}")
+@legacy_app.websocket("/ws/{name}")
 async def ws_endpoint(websocket: WebSocket, name: str, token: str = ""):
     if settings.access_token and token != settings.access_token:
         await websocket.close(code=4001)
@@ -744,4 +744,4 @@ async def ws_endpoint(websocket: WebSocket, name: str, token: str = ""):
 # --------------------------------------------------------------------------- static frontend
 FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
 if FRONTEND_DIST.exists():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
+    pass  # Coaider is rendered by frontend_main, not served as a second app.

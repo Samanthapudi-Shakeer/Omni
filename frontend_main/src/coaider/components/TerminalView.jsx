@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { Terminal } from '@xterm/xterm';
-import { FitAddon } from '@xterm/addon-fit';
-import { WebLinksAddon } from '@xterm/addon-web-links';
-import '@xterm/xterm/css/xterm.css';
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
+import 'xterm/css/xterm.css';
 
 /**
  * Wraps xterm.js -- a real terminal emulator -- so Aider's actual output
@@ -41,7 +40,6 @@ export default function TerminalView({ onWriteRef, onResize, initialChunks, onDa
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
-    term.loadAddon(new WebLinksAddon());
     term.open(containerRef.current);
     fit.fit();
 

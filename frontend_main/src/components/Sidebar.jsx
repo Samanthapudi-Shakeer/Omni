@@ -9,7 +9,7 @@ function fmtSize(bytes) {
 }
 
 export default function Sidebar({
-  workspace, setWorkspace,
+  workspace, setWorkspace, workspaces = [],
   files, refreshFiles,
   attached, toggleAttach, clearAttached, onShowHistory, onDelete,
 }) {
@@ -82,7 +82,7 @@ export default function Sidebar({
       <div className="section-label">WORKSPACE</div>
       <select className="select" style={{ width: '100%' }} value={workspace}
         onChange={e => setWorkspace(e.target.value)}>
-        <option value="test">test</option>
+        {workspaces.length ? workspaces.map(item => <option key={item.name} value={item.name}>{item.name}</option>) : <option value={workspace}>{workspace}</option>}
       </select>
 
       <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
