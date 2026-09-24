@@ -1,0 +1,72 @@
+Static Code Analysis Report
+============================
+
+Files analyzed: chess.py
+Total findings: 26
+
+--- AI Summary ------------------------------------------------------------
+Summary Report for chess.py
+
+High Severity Issues:
+- Errors in module imports and member access
+  - Unable to import 'streamlit' (line 1)
+  - Module import itself (line 2)
+  - Module 'chess' has no 'Board' member (lines 9, 14)
+  - Module 'chess' has no 'square' member (line 29)
+  - Module 'chess' has no 'Move' member; maybe 'move'? (line 63)
+  - Module 'chess' has no 'QUEEN' member (line 66)
+  - Module 'chess' has no 'WHITE' member (lines 75, 82)
+
+Medium Severity Issues:
+- Warnings
+  - Redefining name 'piece' from outer scope (line 20)
+
+Low Severity Issues:
+- Conventions
+  - Trailing whitespace (lines 32, 35, 39, 43, 44, 48, 52, 67)
+  - Missing module docstring (line 1)
+  - Missing function or method docstring (lines 13, 20)
+  - Constant name "bg_color" doesn't conform to UPPER_CASE naming style (lines 34, 38)
+  - Constant name "btn_key" doesn't conform to UPPER_CASE naming style (line 41)
+  - Constant name "winner" doesn't conform to UPPER_CASE naming style (line 75)
+  - Constant name "turn_text" doesn't conform to UPPER_CASE naming style (line 82)
+
+Recurring Patterns:
+- Multiple instances of trailing whitespace and naming convention violations
+- Multiple errors related to undefined members in the 'chess' module
+
+Action List:
+1. Resolve the import error for 'streamlit' and remove self-import
+2. Address the undefined members in the 'chess' module (Board, square, Move, QUEEN, WHITE)
+3. Correct the redefined variable warning for 'piece'
+4. Remove trailing whitespace
+5. Add missing docstrings for the module and functions
+6. Rename constants to conform to UPPER_CASE naming style
+
+--- Raw Findings ----------------------------------------------------------
+[CONVENTION] chess.py:32 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:35 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:39 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:43 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:44 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:48 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:52 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:67 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:1 (pylint/missing-module-docstring) - Missing module docstring
+[ERROR] chess.py:1 (pylint/import-error) - Unable to import 'streamlit'
+[WARNING] chess.py:2 (pylint/import-self) - Module import itself
+[ERROR] chess.py:9 (pylint/no-member) - Module 'chess' has no 'Board' member
+[CONVENTION] chess.py:13 (pylint/missing-function-docstring) - Missing function or method docstring
+[ERROR] chess.py:14 (pylint/no-member) - Module 'chess' has no 'Board' member
+[CONVENTION] chess.py:20 (pylint/missing-function-docstring) - Missing function or method docstring
+[WARNING] chess.py:20 (pylint/redefined-outer-name) - Redefining name 'piece' from outer scope (line 31)
+[ERROR] chess.py:29 (pylint/no-member) - Module 'chess' has no 'square' member
+[CONVENTION] chess.py:34 (pylint/invalid-name) - Constant name "bg_color" doesn't conform to UPPER_CASE naming style
+[CONVENTION] chess.py:38 (pylint/invalid-name) - Constant name "bg_color" doesn't conform to UPPER_CASE naming style
+[CONVENTION] chess.py:41 (pylint/invalid-name) - Constant name "btn_key" doesn't conform to UPPER_CASE naming style
+[ERROR] chess.py:63 (pylint/no-member) - Module 'chess' has no 'Move' member; maybe 'move'?
+[ERROR] chess.py:66 (pylint/no-member) - Module 'chess' has no 'QUEEN' member
+[CONVENTION] chess.py:75 (pylint/invalid-name) - Constant name "winner" doesn't conform to UPPER_CASE naming style
+[ERROR] chess.py:75 (pylint/no-member) - Module 'chess' has no 'WHITE' member
+[CONVENTION] chess.py:82 (pylint/invalid-name) - Constant name "turn_text" doesn't conform to UPPER_CASE naming style
+[ERROR] chess.py:82 (pylint/no-member) - Module 'chess' has no 'WHITE' member

@@ -1,0 +1,541 @@
+:root {
+  --purple: #6C5CE7;
+  --purple-dark: #5b4bd6;
+  --bg-sidebar: #ffffff;
+  --bg-app: #f7f7fb;
+  --bg-dark: #14151f;
+  --bg-dark-panel: #1b1c29;
+  --border: #e7e7ef;
+  --text-main: #1f2130;
+  --text-muted: #8b8d9c;
+  --err: #e5484d;
+  --warn: #f2a93b;
+  --conv: #4a90d9;
+  --refactor: #9b59b6;
+  --info: #6b7280;
+  --ok: #2ecc71;
+  --radius: 10px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; overflow: hidden; }
+body { background: var(--bg-app); color: var(--text-main); }
+
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* On narrow/short viewports, stack sidebar above content instead of
+   squeezing a fixed 280px rail next to a barely-usable content area -
+   this is the "dynamic resolution" behavior: the layout actually
+   restructures itself rather than just shrinking in place. */
+@media (max-width: 760px) {
+  .app-shell { flex-direction: column; height: 100vh; }
+}
+
+/* ---------------------------------------------------------------- sidebar */
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  padding: 20px 18px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+@media (max-width: 760px) {
+  .sidebar {
+    width: 100%;
+    max-height: 38vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+.brand { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+.brand-dot { width: 10px; height: 10px; border-radius: 3px; background: var(--purple); }
+.brand-title { font-weight: 700; font-size: 15px; }
+.brand-sub { font-size: 10px; letter-spacing: 0.06em; color: var(--text-muted); }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 18px 0 8px;
+}
+
+.select, .btn, .input, textarea.input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--text-main);
+}
+
+.btn {
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn:hover { background: #f2f2f7; }
+.btn.primary { background: var(--purple); border-color: var(--purple); color: #fff; }
+.btn.primary:hover { background: var(--purple-dark); }
+.btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.small { padding: 4px 9px; font-size: 12px; border-radius: 6px; }
+.btn.ghost { background: transparent; }
+.btn.danger-text { color: var(--err); }
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+.file-row:hover { background: #f5f5fa; }
+.file-row .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-row .file-size { color: var(--text-muted); font-size: 11px; }
+.file-list { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
+.file-search { width: 100%; margin-bottom: 6px; }
+.tree-folder {
+  width: 100%; border: 0; background: transparent; color: var(--text-main);
+  text-align: left; padding: 5px 4px; cursor: pointer; font-size: 12.5px; font-weight: 600;
+}
+.tree-folder:hover { background: #f5f5fa; border-radius: 5px; }
+.tree-children { padding-left: 12px; border-left: 1px solid var(--border); margin-left: 7px; }
+.file-action { border: 0; background: transparent; color: var(--text-muted); cursor: pointer; padding: 1px 3px; }
+.file-action:hover { color: var(--purple-dark); }
+.file-row .file-action { opacity: 0; }
+.file-row:hover .file-action, .file-action:focus { opacity: 1; }
+
+.attached-box {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  min-height: 70px;
+  padding: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.attached-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #efeaff; color: var(--purple-dark);
+  border-radius: 999px; padding: 3px 9px; font-size: 11.5px; margin: 3px 4px 3px 0;
+}
+.attached-chip button { border: none; background: none; cursor: pointer; color: var(--purple-dark); font-weight: 700; }
+
+/* ------------------------------------------------------------------ main */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px; border-bottom: 1px solid var(--border); background: #fff;
+  flex-shrink: 0;
+}
+.tab-group {
+  display: flex; gap: 4px; background: #f0f0f5; padding: 3px; border-radius: 9px;
+  overflow-x: auto; max-width: 100%;
+  scrollbar-width: none; /* keep the pill bar clean on narrow screens */
+}
+.tab-group::-webkit-scrollbar { display: none; }
+.tab-btn {
+  border: none; background: transparent; padding: 7px 14px; border-radius: 7px;
+  font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted);
+  white-space: nowrap; flex-shrink: 0;
+}
+.tab-btn.active { background: #fff; color: var(--purple-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.topbar .spacer { flex: 1; }
+.badge { font-size: 11px; padding: 3px 9px; border-radius: 999px; background: #f0f0f5; color: var(--text-muted); flex-shrink: 0; }
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 24px;
+}
+
+/* --------------------------------------------------------------- panels */
+.panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 16px;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.panel h3 { margin: 0 0 4px; font-size: 14px; }
+.panel .hint { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+
+/* Reusable responsive 2-column layout (language pickers, model pickers,
+   etc). Collapses to a single column on narrow viewports instead of
+   squeezing selects/inputs until they clip or force the page to widen. */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-width: 0;
+}
+.grid-2 > * { min-width: 0; }
+@media (max-width: 640px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* Source/swap/target language row used by the Translate tab. */
+.lang-swap-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+.lang-swap-row > select { min-width: 0; }
+@media (max-width: 480px) {
+  .lang-swap-row { grid-template-columns: 1fr; }
+  .lang-swap-row > button { justify-self: center; }
+}
+
+textarea.input {
+  width: 100%;
+  resize: vertical;
+  min-height: 110px;
+  /* Dynamic height: scales with the viewport but never gets absurdly tall
+     or short on very large/small windows. */
+  height: min(220px, 32vh);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.issue-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 6px; border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.issue-row:last-child { border-bottom: none; }
+.sev-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.sev-error { background: var(--err); }
+.sev-warning { background: var(--warn); }
+.sev-convention { background: var(--conv); }
+.sev-refactor { background: var(--refactor); }
+.sev-info { background: var(--info); }
+
+.issue-main { flex: 1; min-width: 200px; }
+.issue-msg { font-size: 13px; overflow-wrap: break-word; }
+.issue-meta { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; overflow-wrap: break-word; }
+.issue-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+
+.log-box {
+  background: var(--bg-dark);
+  color: #d7d8e5;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  max-height: min(280px, 40vh);
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.diff-box {
+  background: var(--bg-app);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  max-height: min(320px, 45vh);
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: auto;
+  white-space: pre;
+}
+.history-selects { display: flex; align-items: end; gap: 10px; margin-bottom: 12px; }
+.history-selects label { display: flex; flex-direction: column; gap: 4px; flex: 1; font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.history-selects .select { width: 100%; }
+.history-arrow { color: var(--purple); font-weight: 700; padding-bottom: 9px; }
+.workspace-manager { max-width: 760px; }
+.workspace-add-form { display: flex; gap: 8px; }
+.workspace-add-form .input { flex: 1; }
+.workspace-file-actions { margin-top: 14px; max-height: 280px; overflow-y: auto; }
+.workspace-file-action { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.workspace-file-action span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.diff-add { color: #4ade80; }
+.diff-del { color: #f87171; }
+.diff-meta { color: #7c7fa3; }
+
+.status-pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; display: inline-block; }
+.status-ok { background: #e5f9ee; color: #1e9e5c; }
+.status-error { background: #fde8e8; color: var(--err); overflow-wrap: break-word; }
+
+/* ----------------------------------------------------------------- modal */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(10,10,20,0.45);
+  display: flex; align-items: center; justify-content: center; z-index: 50;
+  padding: 20px;
+}
+.modal {
+  background: #fff; border-radius: 12px; width: 560px; max-width: 92vw;
+  max-height: 85vh; overflow-y: auto; overflow-x: hidden; padding: 20px;
+}
+.modal h4 { margin-top: 0; overflow-wrap: break-word; }
+.modal-close { float: right; border: none; background: none; cursor: pointer; font-size: 16px; color: var(--text-muted); }
+
+.spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid #ffffff55; border-top-color: #fff;
+  animation: spin 0.7s linear infinite; display: inline-block; vertical-align: -2px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state { color: var(--text-muted); font-size: 13px; padding: 30px 0; text-align: center; }
+
+/* ------------------------------------------------------ image translate */
+.image-translate-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .image-translate-layout { grid-template-columns: 1fr; }
+}
+.image-translate-preview { display: flex; flex-direction: column; min-width: 0; }
+.image-translate-controls { min-width: 0; }
+.image-preview-img {
+  width: 100%;
+  height: min(220px, 30vh);
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fafafe;
+}
+.image-preview-placeholder {
+  width: 100%;
+  height: min(180px, 26vh);
+  min-height: 120px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: center;
+  padding: 10px;
+}
+.image-preview-placeholder:hover { background: #f5f5fa; }
+
+/* ---------------------------------------------------------- terminal view */
+.terminal-view {
+  height: min(420px, 55vh);
+  min-height: 240px;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 8px;
+  background: #14151f;
+}
+
+/* -------------------------------------------------------------- diff kit */
+.diffkit-panel { padding-bottom: 12px; }
+.diffkit-frame {
+  width: 100%;
+  height: min(1000px, 85vh);
+  min-height: 420px;
+  border: none;
+  border-radius: 8px;
+  background: #0F1517; /* matches diffkit's own --ink-950 so there's no
+                           light flash while the iframe document loads */
+  display: block;
+}
+
+.translate-shell { display: flex; flex-direction: column; gap: 14px; }
+
+/* Top-level Text / Image / Documents switcher */
+.subtab-group {
+  display: flex; gap: 4px; background: #f0f0f5; padding: 3px; border-radius: 9px;
+  overflow-x: auto; width: fit-content;
+}
+.subtab-btn {
+  display: flex; align-items: center; gap: 6px;
+  border: none; background: transparent; padding: 7px 14px; border-radius: 7px;
+  font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap;
+}
+.subtab-btn .subtab-icon { font-size: 13px; opacity: .8; }
+.subtab-btn.active { background: #fff; color: var(--purple-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.subtab-btn.active .subtab-icon { opacity: 1; }
+
+/* Nested PowerPoint / Word / Excel switcher inside Documents */
+.doctype-group { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.doctype-btn {
+  display: flex; align-items: center; gap: 7px;
+  border: 1px solid var(--border); background: #fff; padding: 6px 12px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; color: var(--text-muted); cursor: pointer;
+}
+.doctype-btn .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+.doctype-btn.active { border-color: var(--purple); color: var(--purple-dark); background: #f6f4ff; }
+.doctype-btn.active .dot { background: var(--purple); }
+
+/* Model + Live-translate settings strip at the bottom of the Text panel */
+.translate-toolbar {
+  display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
+}
+.translate-toolbar .field { display: flex; flex-direction: column; gap: 4px; }
+.translate-toolbar .field-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.translate-toolbar .switch-field { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); padding-bottom: 6px; }
+/* ------------------------------------------------------ interactive sessions
+   Used by Modularization and Test Case Generation: controls on the left,
+   the live terminal + result on the right on wide screens, so an aider
+   session doesn't force endless vertical stacking on a desktop-sized
+   window. Collapses to a single column below 900px. */
+.session-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+.session-layout > * {
+  min-width: 0;
+}
+
+.session-controls {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.session-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
+}
+
+
+.panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.panel-header-row h3 { margin: 0; }
+
+/* Small state-of-the-world pill shown next to a session panel's title. */
+.session-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+.session-status-pill .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.session-status-pill.idle { background: #f0f0f5; color: var(--text-muted); }
+.session-status-pill.idle .dot { background: var(--text-muted); }
+.session-status-pill.running { background: #eef0ff; color: var(--purple-dark); }
+.session-status-pill.running .dot { background: var(--purple); animation: pulse 1.2s ease-in-out infinite; }
+.session-status-pill.done { background: #e5f9ee; color: #1e9e5c; }
+.session-status-pill.done .dot { background: #1e9e5c; }
+.session-status-pill.error { background: #fde8e8; color: var(--err); }
+.session-status-pill.error .dot { background: var(--err); }
+
+/* Terminal window chrome - a small title bar above the live xterm view so
+   it reads as its own dedicated "window" rather than a plain dark box. */
+.terminal-window {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #262f38;
+}
+.terminal-chrome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1b1c29;
+  padding: 8px 12px;
+}
+.terminal-dots { display: flex; gap: 6px; flex-shrink: 0; }
+.terminal-dots span { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.terminal-dots span:nth-child(1) { background: #ff5f56; }
+.terminal-dots span:nth-child(2) { background: #ffbd2e; }
+.terminal-dots span:nth-child(3) { background: #27c93f; }
+.terminal-chrome-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: #8b8da3;
+  margin-left: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.terminal-window .terminal-view { border-radius: 0; }
+
+/* Chip-style list for attached/changed files, replacing plain bullet
+   lists so file names read more like distinct, scannable tokens. */
+.chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 4px; }
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f5f5fa;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-main);
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+.file-chip.changed { background: #e5f9ee; border-color: #b9e7cb; color: #1c7a44; }
+
+/* ------------------------------------------------------------- jobs tray */
+.jobs-tray {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.jobs-tray-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; box-shadow: 0 6px 20px rgba(20,20,40,0.12);
+  font-size: 12.5px; min-width: 0; overflow-wrap: break-word;
+}
+.job-status-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 6px; flex-shrink: 0;
+}
+.job-status-dot-pulse { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }

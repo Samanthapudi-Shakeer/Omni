@@ -1,0 +1,98 @@
+Static Code Analysis Report
+============================
+
+Files analyzed: chess.py
+Total findings: 48
+
+--- AI Summary ------------------------------------------------------------
+Summary Report for chess.py
+
+SEVERITY: ERROR
+- Critical issues with undefined variables and module members:
+  - Module import error for 'streamlit' at line 4
+  - Module 'chess' has no 'Board' member at line 10
+  - Undefined variable 'chess_module' at line 15
+  - Multiple undefined variables 'square_name', 'cols', 'file_idx', 'piece', 'rank', 'session_state', 'square_idx', 'square_at_sq', 'current_turn' throughout the code
+  - Possibly using variables 'piece_at_sq' and 'current_turn' before assignment at line 51
+  - Module 'chess' has no 'Move' member at line 60
+  - Module 'chess' has no 'QUEEN' member at line 63
+
+SEVERITY: WARNING
+- Indentation issues:
+  - Multiple instances of bad indentation throughout lines 55-66
+- Redefinition and reimport issues:
+  - Redefining name 'chess' at line 25
+  - Reimporting 'chess' at line 25
+  - Module import itself at lines 2 and 25
+- Unreachable and unused code:
+  - Unreachable code at line 25
+  - Unused variables 'cols', 'square_name', 'piece', 'BG_COLOR' at various lines
+
+SEVERITY: CONVENTION
+- Naming convention issues:
+  - Variable name "BG_COLOR" doesn't conform to snake_case naming style at lines 34 and 37
+- Import outside toplevel:
+  - Import outside toplevel for 'chess' at line 25
+
+Recurring Patterns:
+- Undefined variables are a significant issue, suggesting issues with variable scope or declaration.
+- Indentation issues indicate inconsistent coding practices.
+- Import issues suggest potential misconfiguration or incorrect module usage.
+
+Action List:
+- Prioritize fixing all ERROR findings to resolve undefined variables and module member issues.
+- Review and correct indentation issues to maintain consistent coding practices.
+- Ensure all imports are correctly configured and avoid self-imports.
+- Address WARNINGs related to redefined and reimported modules to prevent potential bugs.
+- Refactor variable names to adhere to naming conventions for better readability.
+- Investigate unreachable code and remove or enable as necessary.
+
+--- Raw Findings ----------------------------------------------------------
+[CONVENTION] chess.py:32 (pylint/trailing-whitespace) - Trailing whitespace
+[WARNING] chess.py:55 (pylint/bad-indentation) - Bad indentation. Found 16 spaces, expected 8
+[WARNING] chess.py:57 (pylint/bad-indentation) - Bad indentation. Found 20 spaces, expected 12
+[WARNING] chess.py:58 (pylint/bad-indentation) - Bad indentation. Found 20 spaces, expected 12
+[WARNING] chess.py:59 (pylint/bad-indentation) - Bad indentation. Found 16 spaces, expected 8
+[WARNING] chess.py:60 (pylint/bad-indentation) - Bad indentation. Found 20 spaces, expected 12
+[WARNING] chess.py:62 (pylint/bad-indentation) - Bad indentation. Found 20 spaces, expected 12
+[WARNING] chess.py:63 (pylint/bad-indentation) - Bad indentation. Found 24 spaces, expected 16
+[WARNING] chess.py:64 (pylint/bad-indentation) - Bad indentation. Found 20 spaces, expected 12
+[WARNING] chess.py:65 (pylint/bad-indentation) - Bad indentation. Found 24 spaces, expected 16
+[WARNING] chess.py:66 (pylint/bad-indentation) - Bad indentation. Found 24 spaces, expected 16
+[WARNING] chess.py:2 (pylint/import-self) - Module import itself
+[ERROR] chess.py:4 (pylint/import-error) - Unable to import 'streamlit'
+[ERROR] chess.py:10 (pylint/no-member) - Module 'chess' has no 'Board' member
+[ERROR] chess.py:15 (pylint/undefined-variable) - Undefined variable 'chess_module'
+[WARNING] chess.py:25 (pylint/redefined-outer-name) - Redefining name 'chess' from outer scope (line 2)
+[WARNING] chess.py:25 (pylint/unreachable) - Unreachable code
+[WARNING] chess.py:25 (pylint/reimported) - Reimport 'chess' (imported line 2)
+[CONVENTION] chess.py:25 (pylint/import-outside-toplevel) - Import outside toplevel (chess)
+[WARNING] chess.py:25 (pylint/import-self) - Module import itself
+[ERROR] chess.py:29 (pylint/no-member) - Module 'chess' has no 'square' member
+[ERROR] chess.py:30 (pylint/no-member) - Module 'chess' has no 'square_name' member
+[CONVENTION] chess.py:34 (pylint/invalid-name) - Variable name "BG_COLOR" doesn't conform to snake_case naming style
+[CONVENTION] chess.py:37 (pylint/invalid-name) - Variable name "BG_COLOR" doesn't conform to snake_case naming style
+[WARNING] chess.py:27 (pylint/unused-variable) - Unused variable 'cols'
+[WARNING] chess.py:30 (pylint/unused-variable) - Unused variable 'square_name'
+[WARNING] chess.py:31 (pylint/unused-variable) - Unused variable 'piece'
+[WARNING] chess.py:34 (pylint/unused-variable) - Unused variable 'BG_COLOR'
+[ERROR] chess.py:39 (pylint/undefined-variable) - Undefined variable 'square_name'
+[ERROR] chess.py:40 (pylint/undefined-variable) - Undefined variable 'cols'
+[ERROR] chess.py:40 (pylint/undefined-variable) - Undefined variable 'file_idx'
+[ERROR] chess.py:41 (pylint/undefined-variable) - Undefined variable 'piece'
+[ERROR] chess.py:44 (pylint/undefined-variable) - Undefined variable 'square_name'
+[ERROR] chess.py:44 (pylint/undefined-variable) - Undefined variable 'file_idx'
+[ERROR] chess.py:44 (pylint/undefined-variable) - Undefined variable 'rank'
+[ERROR] chess.py:47 (pylint/undefined-variable) - Undefined variable 'session_state'
+[ERROR] chess.py:48 (pylint/undefined-variable) - Undefined variable 'session_state'
+[ERROR] chess.py:48 (pylint/undefined-variable) - Undefined variable 'square_idx'
+[ERROR] chess.py:49 (pylint/undefined-variable) - Undefined variable 'session_state'
+[ERROR] chess.py:51 (pylint/possibly-used-before-assignment) - Possibly using variable 'piece_at_sq' before assignment
+[ERROR] chess.py:51 (pylint/possibly-used-before-assignment) - Possibly using variable 'current_turn' before assignment
+[ERROR] chess.py:52 (pylint/undefined-variable) - Undefined variable 'session_state'
+[ERROR] chess.py:52 (pylint/undefined-variable) - Undefined variable 'square_idx'
+[ERROR] chess.py:55 (pylint/undefined-variable) - Undefined variable 'session_state'
+[ERROR] chess.py:55 (pylint/undefined-variable) - Undefined variable 'square_idx'
+[ERROR] chess.py:60 (pylint/no-member) - Module 'chess' has no 'Move' member; maybe 'move'?
+[ERROR] chess.py:60 (pylint/undefined-variable) - Undefined variable 'square_idx'
+[ERROR] chess.py:63 (pylint/no-member) - Module 'chess' has no 'QUEEN' member

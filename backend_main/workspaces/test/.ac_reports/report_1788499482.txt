@@ -1,0 +1,27 @@
+Static Code Analysis Report
+============================
+
+Files analyzed: chess.py
+Total findings: 1
+
+--- AI Summary ------------------------------------------------------------
+Summary Report for chess.py
+
+Headings:
+High Severity Issues
+Recurring Patterns
+Action List
+
+High Severity Issues
+- Syntax Error at chess.py:46 - Unexpected indent. This is a critical error that prevents the code from running. It needs immediate attention to fix the indentation.
+
+Recurring Patterns
+- None identified other than the syntax error which appears to be a one-off issue.
+
+Action List
+- Prioritize fixing the syntax error at line 46 to resolve the unexpected indent.
+- Review the code around line 46 for any additional indentation issues or coding standards violations.
+- Re-run static analysis after fixing the error to ensure no other critical issues are present.
+
+--- Raw Findings ----------------------------------------------------------
+[ERROR] chess.py:46 (pylint/syntax-error) - Parsing failed: 'unexpected indent (chess, line 46)'

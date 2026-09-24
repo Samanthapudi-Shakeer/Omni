@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>diffkit — local code diff</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230F1517'/%3E%3Cpath d='M8 20 L16 8 L24 20 Z' fill='%23E3A23C'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    /* Light theme — cool, minimal off-white base with a soft paper feel
+       instead of stark white, plus darker/more saturated accent shades
+       so contrast holds up against the light background. */
+    --ink-950:#FAFAF9; --ink-900:#FFFFFF; --ink-800:#F2F3F2; --ink-700:#E7E9E8;
+    --line:#E2E4E3; --line-soft:#EDEEED;
+    --fg:#181C1B; --fg-dim:#5F6A68; --fg-faint:#9AA3A1;
+    --amber:#B0740E; --amber-soft:rgba(176,116,14,.10);
+    --moss:#2C8F63; --moss-bg:rgba(44,143,99,.09); --moss-line:rgba(44,143,99,.55);
+    --rust:#BC5136; --rust-bg:rgba(188,81,54,.09); --rust-line:rgba(188,81,54,.55);
+    --mod-bg:rgba(176,116,14,.08); --mod-line:rgba(176,116,14,.5);
+    --violet:#6A57C8; --violet-bg:rgba(106,87,200,.09); --violet-line:rgba(106,87,200,.5);
+    --font-display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
+    --font-body:'Inter',ui-sans-serif,system-ui,sans-serif;
+    --font-mono:'JetBrains Mono','SFMono-Regular',Consolas,monospace;
+    --radius:8px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--ink-950); color:var(--fg);
+    font-family:var(--font-body); font-size:14px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--amber-soft); color:var(--fg); }
+  :focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+  button, input, select{ font-family:inherit; }
+  button{ cursor:pointer; }
+  h1,h2,h3{ font-family:var(--font-display); margin:0; }
+
+  /* ---------- layout shell ---------- */
+  .shell{ max-width:100%; margin:0 auto; padding:24px 28px 60px; }
+
+  header.app-header{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding-bottom:20px; margin-bottom:22px; border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .brand .mark{ width:20px; height:20px; flex:none; }
+  .brand h1{ font-family:var(--font-mono); font-weight:600; font-size:19px; letter-spacing:.2px; }
+  .brand .tagline{ color:var(--fg-dim); font-size:12.5px; margin-left:10px; padding-left:10px; border-left:1px solid var(--line); }
+  .header-note{ color:var(--fg-faint); font-size:12px; text-align:right; max-width:280px; }
+
+  /* ---------- upload stage ---------- */
+  .upload-stage{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:1000px){ .upload-stage{ grid-template-columns:1fr; } }
+
+  .dropzone{
+    border:1.5px dashed var(--line); border-radius:var(--radius); background:var(--ink-900);
+    padding:34px 22px; text-align:center; transition:border-color .15s ease, background .15s ease;
+    display:flex; flex-direction:column; align-items:center; gap:10px; min-height:210px; justify-content:center;
+  }
+  .dropzone:hover{ border-color:var(--fg-faint); }
+  .dropzone.drag{ border-color:var(--amber); background:var(--amber-soft); }
+  .dropzone.filled{ border-style:solid; text-align:left; align-items:flex-start; padding:20px 22px; min-height:auto; }
+  .dz-label{ font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--fg-faint); }
+  .dz-slot-a .dz-label{ color:var(--rust); }
+  .dz-slot-b .dz-label{ color:var(--moss); }
+  .dz-icon{ opacity:.55; }
+  .dz-hint{ color:var(--fg-dim); font-size:13px; }
+  .dz-hint b{ color:var(--fg); font-weight:600; }
+  .dz-browse{
+    background:var(--ink-900); border:1px solid var(--line); color:var(--fg); padding:6px 14px;
+    border-radius:6px; font-size:12.5px; margin-top:4px;
+  }
+  .dz-browse:hover{ border-color:var(--amber); color:var(--amber); }
+  .dz-file{ display:flex; align-items:center; gap:10px; width:100%; }
+  .dz-file .fname{ font-family:var(--font-mono); font-size:13.5px; font-weight:500; word-break:break-all; }
+  .dz-file .fmeta{ font-size:11.5px; color:var(--fg-faint); margin-top:2px; }
+  .dz-clear{ margin-left:auto; background:none; border:none; color:var(--fg-faint); font-size:18px; line-height:1; padding:2px 6px; border-radius:4px; }
+  .dz-clear:hover{ color:var(--rust); background:var(--rust-bg); }
+  .lang-badge{
+    display:inline-block; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.03em;
+    padding:2px 7px; border-radius:99px; background:var(--ink-800); color:var(--fg-dim); border:1px solid var(--line);
+    margin-top:8px;
+  }
+
+  /* ---------- diff stage ---------- */
+  .diff-stage{ display:none; margin-top:22px; }
+  .diff-stage.active{ display:block; animation:fadein .25s ease; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+  @media (prefers-reduced-motion:reduce){ .diff-stage.active{ animation:none; } }
+
+  .panel-box{ background:var(--ink-900); border:1px solid var(--line); border-radius:var(--radius); }
+
+  .toolbar{
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    padding:12px 16px; margin-bottom:12px;
+  }
+  .stats{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-family:var(--font-mono); font-size:12.5px; }
+  .stat{ display:flex; align-items:center; gap:6px; color:var(--fg-dim); }
+  .stat .dot{ width:8px; height:8px; border-radius:2px; flex:none; }
+  .dot.moss{ background:var(--moss); } .dot.rust{ background:var(--rust); } .dot.mod{ background:var(--amber); } .dot.violet{ background:var(--violet); }
+  .filenames{ color:var(--fg-faint); font-size:12px; font-family:var(--font-body); }
+  .filenames b{ color:var(--fg-dim); font-weight:600; }
+  .summary-toggle{
+    background:var(--ink-800); border:1px solid var(--line); color:var(--fg-dim); padding:5px 12px; border-radius:6px; font-size:12px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .summary-toggle:hover{ color:var(--amber); border-color:var(--amber); }
+  .summary-toggle .chev{ transition:transform .2s ease; }
+  .summary-toggle.open .chev{ transform:rotate(180deg); }
+
+  .hunk-nav{ display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:12px; color:var(--fg-dim); }
+  .hunk-nav button{
+    background:var(--ink-800); border:1px solid var(--line); color:var(--fg); width:26px; height:26px; border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hunk-nav button:hover:not(:disabled){ border-color:var(--amber); color:var(--amber); }
+  .hunk-nav button:disabled{ opacity:.35; cursor:default; }
+
+  /* summary collapse panel */
+  .summary-collapse{ display:grid; grid-template-rows:0fr; transition:grid-template-rows .25s ease; }
+  .summary-collapse.open{ grid-template-rows:1fr; margin-bottom:12px; }
+  .summary-inner{ overflow:hidden; min-height:0; }
+  .summary-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(112px,1fr)); gap:10px; padding:14px 16px; }
+  .summary-card{ padding:10px 12px; border-radius:6px; background:var(--ink-800); border:1px solid var(--line); }
+  .summary-card .num{ font-family:var(--font-mono); font-size:22px; font-weight:600; line-height:1.1; color:var(--fg); }
+  .summary-card .lbl{ font-size:10.5px; color:var(--fg-dim); text-transform:uppercase; letter-spacing:.07em; margin-top:3px; }
+  .summary-card.added .num{ color:var(--moss); } .summary-card.deleted .num{ color:var(--rust); }
+  .summary-card.modified .num{ color:var(--amber); } .summary-card.renamed .num{ color:var(--amber); }
+  .summary-card.moved .num{ color:var(--violet); }
+
+  /* controls + ignore options */
+  .controls-row, .options-row{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    padding:10px 16px; font-size:13px; color:var(--fg-dim);
+  }
+  .controls-row{ border-top:1px solid var(--line-soft); }
+  .options-row{ border-top:1px solid var(--line-soft); }
+  .opt{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  .opt-label{ color:var(--fg-faint); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; margin-right:2px; }
+  input[type=checkbox]{ accent-color:var(--amber); width:14px; height:14px; }
+
+  .seg{ display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .seg button{ background:var(--ink-800); color:var(--fg-dim); border:none; padding:5px 12px; font-size:12.5px; font-family:var(--font-mono); border-right:1px solid var(--line); }
+  .seg button:last-child{ border-right:none; }
+  .seg button.active{ background:var(--amber-soft); color:var(--amber); }
+  .seg button:not(.active):hover{ color:var(--fg); }
+  .spacer{ flex:1; }
+  .large-warn{ color:var(--amber); font-size:12px; }
+
+  .search-box{ display:flex; align-items:center; gap:6px; background:var(--ink-800); border:1px solid var(--line); border-radius:6px; padding:4px 8px; }
+  .search-box svg{ opacity:.5; flex:none; }
+  .search-box input{ background:none; border:none; color:var(--fg); font-size:12.5px; width:150px; outline:none; }
+  .search-box .count{ font-family:var(--font-mono); font-size:11px; color:var(--fg-faint); min-width:44px; text-align:right; }
+  .search-box button{ background:none; border:none; color:var(--fg-dim); width:20px; height:20px; border-radius:4px; display:flex; align-items:center; justify-content:center; }
+  .search-box button:hover{ color:var(--amber); }
+
+  /* diff area + minimap */
+  .diff-area{ display:flex; gap:8px; }
+  .diff-panel{
+    flex:1; min-width:0; border:1px solid var(--line); border-radius:var(--radius); background:var(--ink-900);
+    overflow:auto; max-height:68vh; font-family:var(--font-mono); font-size:12.8px; line-height:1.65;
+  }
+  .minimap-wrap{
+    width:14px; flex:none; position:relative; border:1px solid var(--line); border-radius:6px; overflow:hidden;
+    background:var(--ink-800); cursor:pointer; max-height:68vh;
+  }
+  .minimap-wrap canvas{ display:block; }
+  .minimap-viewport{ position:absolute; left:0; right:0; background:rgba(24,28,27,.08); border-top:1px solid var(--fg-dim); border-bottom:1px solid var(--fg-dim); pointer-events:none; }
+
+  .drow{ display:grid; }
+  .drow.split{ grid-template-columns:46px 1fr 46px 1fr; }
+  .drow.linear{ grid-template-columns:22px 46px 46px 1fr; }
+  .gutter{ user-select:none; text-align:right; padding:0 8px; color:var(--fg-faint); border-right:1px solid var(--line-soft); white-space:nowrap; }
+  .cell{ padding:0 12px; white-space:pre; overflow-x:auto; position:relative; }
+  .wrap .cell{ white-space:pre-wrap; overflow-wrap:anywhere; }
+  .cell.empty{ background:repeating-linear-gradient(135deg, var(--ink-800) 0 6px, var(--ink-900) 6px 12px); }
+  .cell.add{ background:var(--moss-bg); }
+  .cell.del{ background:var(--rust-bg); }
+  .cell.mod-a{ background:var(--mod-bg); border-left:2px solid var(--rust-line); }
+  .cell.mod-b{ background:var(--mod-bg); border-left:2px solid var(--moss-line); }
+  .cell.moved-out{ background:var(--violet-bg); border-left:2px solid var(--violet-line); }
+  .cell.moved-in{ background:var(--violet-bg); border-left:2px solid var(--violet-line); }
+  .drow.split .gutter.b{ border-left:1px solid var(--line); }
+  .drow.linear .marker{ text-align:center; padding:0; color:var(--fg-faint); }
+  .drow.linear.add .marker{ color:var(--moss); } .drow.linear.del .marker{ color:var(--rust); } .drow.linear.mod .marker{ color:var(--amber); }
+  .drow.linear.moved .marker{ color:var(--violet); }
+  .drow.inline .cell.del{ text-decoration:line-through; opacity:.8; }
+  .drow:hover{ filter:brightness(0.98); }
+  .drow.flash{ animation:flashrow .9s ease; }
+  @keyframes flashrow{ 0%{ box-shadow:inset 0 0 0 999px rgba(176,116,14,.18);} 100%{ box-shadow:inset 0 0 0 999px rgba(176,116,14,0);} }
+  @media (prefers-reduced-motion:reduce){ .drow.flash{ animation:none; } }
+
+  mark.wd-del{ background:rgba(188,81,54,.28); color:#5C2214; border-radius:2px; padding:0 1px; text-decoration:none; }
+  mark.wd-ins{ background:rgba(44,143,99,.28); color:#0F4B31; border-radius:2px; padding:0 1px; text-decoration:none; }
+  del.wd-del{ background:rgba(188,81,54,.20); color:#5C2214; border-radius:2px; padding:0 1px; text-decoration:line-through; }
+  ins.wd-ins{ background:rgba(44,143,99,.20); color:#0F4B31; border-radius:2px; padding:0 1px; text-decoration:underline; }
+  mark.search-hit{ background:var(--amber); color:#FFF9EE; border-radius:2px; padding:0 1px; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:4px; font-family:var(--font-body); font-size:10px; font-weight:700;
+    padding:1px 7px; border-radius:99px; margin-left:10px; vertical-align:middle; text-transform:uppercase; letter-spacing:.04em;
+  }
+  .badge-mod{ background:var(--amber-soft); color:var(--amber); border:1px solid rgba(176,116,14,.3); }
+  .badge-move{ background:var(--violet-bg); color:var(--violet); border:1px solid rgba(106,87,200,.3); }
+
+  .fold-divider{
+    grid-column:1 / -1; display:flex; align-items:center; gap:10px; padding:6px 16px; cursor:pointer;
+    color:var(--fg-faint); font-size:11.5px; background:var(--ink-800); border-top:1px dashed var(--line); border-bottom:1px dashed var(--line);
+  }
+  .fold-divider:hover{ color:var(--amber); background:var(--ink-700); }
+  .fold-divider .line{ flex:1; height:1px; background:var(--line); }
+
+  .empty-diff-msg{ padding:24px; text-align:center; color:var(--fg-dim); }
+
+  .hljs-keyword,.hljs-built_in{ color:#2C5FA8; } .hljs-string{ color:#8A6D12; } .hljs-comment{ color:var(--fg-faint); font-style:italic; }
+  .hljs-number{ color:#7A4FA0; } .hljs-title.function_,.hljs-title{ color:#227A56; } .hljs-type{ color:#B0740E; } .hljs-literal{ color:#7A4FA0; }
+  .hljs-params{ color:var(--fg); } .hljs-meta{ color:var(--fg-faint); }
+
+  .actions-row{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  .btn{ background:var(--ink-900); border:1px solid var(--line); color:var(--fg); padding:8px 14px; border-radius:6px; font-size:13px; display:inline-flex; align-items:center; gap:7px; }
+  .btn:hover{ border-color:var(--amber); color:var(--amber); }
+  .btn.primary{ background:var(--amber-soft); border-color:var(--amber); color:var(--amber); }
+  .btn.ghost{ background:none; }
+  .btn.danger:hover{ border-color:var(--rust); color:var(--rust); }
+
+  footer{ margin-top:34px; color:var(--fg-faint); font-size:12px; text-align:center; }
+  footer .mark-inline{ color:var(--amber); }
+
+  @media print{
+    body{ background:#fff; color:#111; }
+    .no-print{ display:none !important; }
+    .diff-panel{ max-height:none; overflow:visible; border:1px solid #ccc; }
+    .cell.empty{ background:#f2f2f2; }
+    .cell.add{ background:#e4f5eb; } .cell.del{ background:#fbe9e4; }
+    .cell.mod-a,.cell.mod-b{ background:#fff3e0; }
+    .cell.moved-out,.cell.moved-in{ background:#efecfb; }
+    mark.wd-del,del.wd-del{ background:#f3b7a4; color:#111; } mark.wd-ins,ins.wd-ins{ background:#a8dcc0; color:#111; }
+    .gutter{ color:#888; border-color:#ddd; }
+    .hljs-keyword,.hljs-built_in,.hljs-type{ color:#1b4f9c; } .hljs-string{ color:#7a6412; } .hljs-comment{ color:#888; }
+    .print-title{ display:block !important; font-family:var(--font-mono); font-size:16px; margin-bottom:10px; }
+  }
+  .print-title{ display:none; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="app-header no-print">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#1B2529"/><path d="M8 20 L16 8 L24 20 Z" fill="#E3A23C"/></svg>
+      <h1>diffkit</h1>
+      <span class="tagline">compare two code files, side by side — entirely in this browser tab</span>
+    </div>
+    <div class="header-note">No servers, no uploads, no expiring links. Files never leave your machine.</div>
+  </header>
+
+  <div class="print-title" id="printTitle"></div>
+
+  <section class="upload-stage no-print" id="uploadStage">
+    <div class="dropzone dz-slot-a" id="dzA" tabindex="0" role="button" aria-label="Load file A">
+      <div class="dz-inner" id="dzAInner">
+        <svg class="dz-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        <div class="dz-label">File A · original</div>
+        <div class="dz-hint">Drag a file here, or <b>click to browse</b></div>
+        <button type="button" class="dz-browse">Choose file</button>
+      </div>
+      <input type="file" id="inputA" style="display:none">
+    </div>
+    <div class="dropzone dz-slot-b" id="dzB" tabindex="0" role="button" aria-label="Load file B">
+      <div class="dz-inner" id="dzBInner">
+        <svg class="dz-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        <div class="dz-label">File B · changed</div>
+        <div class="dz-hint">Drag a file here, or <b>click to browse</b></div>
+        <button type="button" class="dz-browse">Choose file</button>
+      </div>
+      <input type="file" id="inputB" style="display:none">
+    </div>
+  </section>
+
+  <section class="diff-stage" id="diffStage">
+
+    <div class="panel-box no-print">
+      <div class="toolbar">
+        <div class="stats" id="statsBar"></div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="summary-toggle" id="summaryToggle">Summary <svg class="chev" width="10" height="10" viewBox="0 0 10 10"><path d="M1 3 L5 7 L9 3" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button>
+          <div class="hunk-nav" id="hunkNav">
+            <button id="prevHunk" title="Previous change (p)">↑</button>
+            <span id="hunkLabel">no changes</span>
+            <button id="nextHunk" title="Next change (n)">↓</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-collapse" id="summaryCollapse">
+        <div class="summary-inner">
+          <div class="summary-grid" id="summaryGrid"></div>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="searchInput" placeholder="Search in diff…">
+          <span class="count" id="searchCount"></span>
+          <button id="searchPrev" title="Previous match">↑</button>
+          <button id="searchNext" title="Next match">↓</button>
+        </div>
+        <div class="seg" id="viewSeg">
+          <button data-mode="split" class="active">Side-by-Side</button>
+          <button data-mode="unified">Unified</button>
+          <button data-mode="inline">Inline</button>
+        </div>
+        <label class="opt"><input type="checkbox" id="optCollapse" checked> Collapse unchanged</label>
+        <label class="opt"><input type="checkbox" id="optWrap"> Wrap long lines</label>
+        <span class="spacer"></span>
+        <span class="large-warn" id="largeWarn" style="display:none">Large file — comparison may take a moment</span>
+      </div>
+
+      <div class="options-row">
+        <span class="opt-label">Ignore</span>
+        <label class="opt" title="Leading/trailing spaces and runs of internal whitespace don't count as changes."><input type="checkbox" id="optWS"> Whitespace</label>
+        <label class="opt" title="Blank lines are excluded from the comparison and hidden from the diff entirely."><input type="checkbox" id="optEmpty"> Empty lines</label>
+        <label class="opt" title="Uppercase vs lowercase differences don't count as changes."><input type="checkbox" id="optCase"> Case</label>
+        <label class="opt" title="CRLF vs LF differences are normalized automatically; this guards against stray characters in mixed files."><input type="checkbox" id="optEOL"> Line endings</label>
+        <label class="opt" title="// # and /* */ style comments are stripped before comparing (heuristic — doesn't fully parse strings)."><input type="checkbox" id="optComments"> Comments</label>
+        <label class="opt" title="Aggressively ignores ALL spacing differences (e.g. 'x=5' vs 'x = 5' compare equal). Overrides the Whitespace option."><input type="checkbox" id="optFormat"> Formatting-only changes</label>
+      </div>
+    </div>
+
+    <div class="diff-area" style="margin-top:12px;">
+      <div class="diff-panel" id="diffPanel"></div>
+      <div class="minimap-wrap no-print" id="minimapWrap" title="Click to jump">
+        <canvas id="minimap"></canvas>
+        <div class="minimap-viewport" id="minimapViewport"></div>
+      </div>
+    </div>
+
+    <div class="actions-row no-print">
+      <button class="btn primary" id="btnPrint">Save as PDF</button>
+      <button class="btn" id="btnImage">Save as image</button>
+      <button class="btn" id="btnPatch">Download .diff</button>
+      <button class="btn ghost danger" id="btnReset">Compare new files</button>
+    </div>
+  </section>
+
+  <footer class="no-print"><span class="mark-inline">▲</span> diffkit — a single HTML file, no install required. Open it anywhere, on or offline (fonts/export icons need one initial internet connection).</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     CORE DIFF ENGINE  (Myers array diff — unit tested separately)
+     ============================================================ */
+  function diffArrays(a, b){
+    const n=a.length, m=b.length, max=(n+m)||1;
+    let v=new Array(2*max+1).fill(0);
+    const trace=[]; let dFinal=0;
+    outer:
+    for(let d=0; d<=max; d++){
+      trace.push(v.slice());
+      for(let k=-d;k<=d;k+=2){
+        const idx=k+max; let x;
+        if(k===-d || (k!==d && v[idx-1]<v[idx+1])) x=v[idx+1]; else x=v[idx-1]+1;
+        let y=x-k;
+        while(x<n && y<m && a[x]===b[y]){ x++; y++; }
+        v[idx]=x;
+        if(x>=n && y>=m){ dFinal=d; break outer; }
+      }
+    }
+    const ops=[]; let x=n,y=m;
+    for(let depth=dFinal; depth>0; depth--){
+      const vv=trace[depth]; const k=x-y; const idx=k+max; let prevK;
+      if(k===-depth || (k!==depth && vv[idx-1]<vv[idx+1])) prevK=k+1; else prevK=k-1;
+      const prevX=vv[prevK+max], prevY=prevX-prevK;
+      while(x>prevX && y>prevY){ ops.push({type:'equal',aIndex:x-1,bIndex:y-1}); x--; y--; }
+      if(x===prevX){ ops.push({type:'insert',bIndex:y-1}); y--; }
+      else { ops.push({type:'delete',aIndex:x-1}); x--; }
+    }
+    while(x>0 && y>0){ ops.push({type:'equal',aIndex:x-1,bIndex:y-1}); x--; y--; }
+    ops.reverse();
+    return ops;
+  }
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function tokenize(line){ return line.match(/\s+|[A-Za-z_][A-Za-z0-9_]*|[0-9]+(\.[0-9]+)?|./g) || []; }
+
+  function wordDiff(lineA, lineB){
+    const ta=tokenize(lineA), tb=tokenize(lineB);
+    const ops=diffArrays(ta,tb);
+    let htmlA='', htmlB='';
+    for(const op of ops){
+      if(op.type==='equal'){ htmlA+=esc(ta[op.aIndex]); htmlB+=esc(tb[op.bIndex]); }
+      else if(op.type==='delete'){ htmlA+='<mark class="wd-del">'+esc(ta[op.aIndex])+'</mark>'; }
+      else if(op.type==='insert'){ htmlB+='<mark class="wd-ins">'+esc(tb[op.bIndex])+'</mark>'; }
+    }
+    return {htmlA,htmlB};
+  }
+  function wordDiffInline(lineA, lineB){
+    const ta=tokenize(lineA), tb=tokenize(lineB);
+    const ops=diffArrays(ta,tb);
+    let html='';
+    for(const op of ops){
+      if(op.type==='equal') html+=esc(ta[op.aIndex]);
+      else if(op.type==='delete') html+='<del class="wd-del">'+esc(ta[op.aIndex])+'</del>';
+      else if(op.type==='insert') html+='<ins class="wd-ins">'+esc(tb[op.bIndex])+'</ins>';
+    }
+    return html;
+  }
+
+  function highlightLine(line, lang){
+    if(line===undefined || line===null) return '';
+    if(!lang || lang==='plaintext' || typeof hljs==='undefined' || !hljs.getLanguage(lang)) return esc(line);
+    try{ return hljs.highlight(line, {language:lang, ignoreIllegals:true}).value; }
+    catch(e){ return esc(line); }
+  }
+
+  /* ---- ignore-option aware comparison arrays (index-mapped, unit tested) ---- */
+  const C_LIKE = new Set(['cpp','c','java','javascript','typescript','csharp','go','rust','kotlin','swift','php']);
+  function stripLineComment(line, marker){
+    let inStr=null;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(inStr){ if(c==='\\'){ i++; continue; } if(c===inStr) inStr=null; continue; }
+      if(c==='"'||c==="'"){ inStr=c; continue; }
+      if(c===marker){ return line.slice(0,i).replace(/\s+$/,''); }
+    }
+    return line;
+  }
+  function stripCLikeComment(line){
+    let out=''; let inStr=null; let i=0;
+    while(i<line.length){
+      const c=line[i];
+      if(inStr){ out+=c; if(c==='\\' && i+1<line.length){ out+=line[i+1]; i+=2; continue; } if(c===inStr) inStr=null; i++; continue; }
+      if(c==='"'||c==="'"){ inStr=c; out+=c; i++; continue; }
+      if(c==='/' && line[i+1]==='/'){ break; }
+      if(c==='/' && line[i+1]==='*'){ const end=line.indexOf('*/', i+2); if(end===-1){ break; } i=end+2; continue; }
+      out+=c; i++;
+    }
+    return out.replace(/\s+$/,'');
+  }
+  function stripComments(line, lang){
+    if(lang==='python') return stripLineComment(line, '#');
+    if(C_LIKE.has(lang)) return stripCLikeComment(line);
+    return line;
+  }
+
+  function transformLine(line, opts, lang){
+    let s=line;
+    if(opts.ignoreComments) s=stripComments(s, lang);
+    if(opts.ignoreLineEndings) s=s.replace(/\r/g,'');
+    if(opts.ignoreFormatting) s=s.replace(/\s+/g,'');
+    else if(opts.ignoreWS) s=s.trim().replace(/\s+/g,' ');
+    if(opts.ignoreCase) s=s.toLowerCase();
+    return s;
+  }
+
+  function buildComparisonArrays(linesA, linesB, opts){
+    if(!opts.ignoreEmptyLines){
+      const cmpA=linesA.map(l=>transformLine(l,opts,opts.langA));
+      const cmpB=linesB.map(l=>transformLine(l,opts,opts.langB));
+      return {cmpA,cmpB, mapA:linesA.map((_,i)=>i), mapB:linesB.map((_,i)=>i)};
+    }
+    const cmpA=[],mapA=[]; linesA.forEach((l,i)=>{ if(l.trim()!==''){ cmpA.push(transformLine(l,opts,opts.langA)); mapA.push(i);} });
+    const cmpB=[],mapB=[]; linesB.forEach((l,i)=>{ if(l.trim()!==''){ cmpB.push(transformLine(l,opts,opts.langB)); mapB.push(i);} });
+    return {cmpA,cmpB,mapA,mapB};
+  }
+
+  function computeDiffRows(linesA, linesB, cmpA, cmpB, mapA, mapB){
+    const ops=diffArrays(cmpA,cmpB);
+    const rows=[]; let i=0;
+    while(i<ops.length){
+      if(ops[i].type==='equal'){ rows.push({type:'equal', aLine:linesA[mapA[ops[i].aIndex]], bLine:linesB[mapB[ops[i].bIndex]]}); i++; continue; }
+      const dels=[], inss=[];
+      while(i<ops.length && ops[i].type!=='equal'){
+        if(ops[i].type==='delete') dels.push(linesA[mapA[ops[i].aIndex]]); else inss.push(linesB[mapB[ops[i].bIndex]]);
+        i++;
+      }
+      const pc=Math.min(dels.length,inss.length);
+      for(let p=0;p<pc;p++) rows.push({type:'mod', aLine:dels[p], bLine:inss[p]});
+      for(let p=pc;p<dels.length;p++) rows.push({type:'del', aLine:dels[p]});
+      for(let p=pc;p<inss.length;p++) rows.push({type:'add', bLine:inss[p]});
+    }
+    return rows;
+  }
+
+  function annotate(rows){
+    let aNum=0,bNum=0,hunkIndex=-1,lastEqual=true;
+    for(const r of rows){
+      if(r.type==='equal'){ aNum++; bNum++; r.aNum=aNum; r.bNum=bNum; r.hunk=null; lastEqual=true; r.cls='unchanged'; }
+      else{
+        if(lastEqual) hunkIndex++;
+        r.hunk=hunkIndex; lastEqual=false;
+        if(r.type==='del'){ aNum++; r.aNum=aNum; r.bNum=null; r.cls='deleted'; }
+        else if(r.type==='add'){ bNum++; r.bNum=bNum; r.aNum=null; r.cls='added'; }
+        else { aNum++; bNum++; r.aNum=aNum; r.bNum=bNum; r.cls='modified'; }
+      }
+    }
+    return hunkIndex+1;
+  }
+
+  /* ---- smart classification: moved blocks + renames (unit tested) ---- */
+  function classifyMoves(rows, minBlockLen, minLineLen){
+    minBlockLen=minBlockLen||2; minLineLen=minLineLen||3;
+    const delGroups=[], addGroups=[]; let i=0;
+    while(i<rows.length){
+      if(rows[i].type==='del'){ const s=i; const lines=[]; while(i<rows.length && rows[i].type==='del'){ lines.push(rows[i].aLine); i++; } delGroups.push({start:s,end:i-1,lines}); }
+      else if(rows[i].type==='add'){ const s=i; const lines=[]; while(i<rows.length && rows[i].type==='add'){ lines.push(rows[i].bLine); i++; } addGroups.push({start:s,end:i-1,lines}); }
+      else i++;
+    }
+    const addMap=new Map();
+    addGroups.forEach(g=>{
+      if(g.lines.length<minBlockLen) return;
+      if(!g.lines.some(l=>l.trim().length>=minLineLen)) return;
+      const key=g.lines.join('\n');
+      if(!addMap.has(key)) addMap.set(key,[]);
+      addMap.get(key).push(g);
+    });
+    let moveId=0;
+    for(const dg of delGroups){
+      if(dg.lines.length<minBlockLen) continue;
+      if(!dg.lines.some(l=>l.trim().length>=minLineLen)) continue;
+      const key=dg.lines.join('\n');
+      const q=addMap.get(key);
+      if(q && q.length){
+        const ag=q.shift(); const id=moveId++;
+        for(let r=dg.start;r<=dg.end;r++){ rows[r].cls='moved-out'; rows[r].moveId=id; rows[r].moveRef=ag.start; }
+        for(let r=ag.start;r<=ag.end;r++){ rows[r].cls='moved-in'; rows[r].moveId=id; rows[r].moveRef=dg.start; }
+      }
+    }
+    return moveId;
+  }
+
+  const IDENT_RE=/^[A-Za-z_][A-Za-z0-9_]*$/;
+  function countChangedTokens(lineA, lineB){
+    const ta=tokenize(lineA), tb=tokenize(lineB);
+    const ops=diffArrays(ta,tb);
+    let delTok=[], insTok=[];
+    for(const op of ops){
+      if(op.type==='delete' && ta[op.aIndex].trim()!=='') delTok.push(ta[op.aIndex]);
+      if(op.type==='insert' && tb[op.bIndex].trim()!=='') insTok.push(tb[op.bIndex]);
+    }
+    return {delTok,insTok};
+  }
+  function classifyRenames(rows){
+    let renamed=0;
+    for(const r of rows){
+      if(r.type!=='mod') continue;
+      const {delTok,insTok}=countChangedTokens(r.aLine,r.bLine);
+      if(delTok.length===1 && insTok.length===1 && IDENT_RE.test(delTok[0]) && IDENT_RE.test(insTok[0]) && delTok[0]!==insTok[0]){ r.cls='renamed'; renamed++; }
+      else r.cls='modified';
+    }
+    return renamed;
+  }
+
+  /* ============================================================
+     LANGUAGE DETECTION + FILE HELPERS
+     ============================================================ */
+  const LANG_MAP={cpp:'cpp',cc:'cpp',cxx:'cpp','c++':'cpp',h:'cpp',hpp:'cpp',hh:'cpp',hxx:'cpp',c:'c',
+    py:'python',pyw:'python',pyi:'python', js:'javascript',mjs:'javascript',ts:'typescript',
+    java:'java',cs:'csharp',go:'go',rs:'rust',rb:'ruby',php:'php',html:'xml',xml:'xml',css:'css',
+    json:'json',md:'markdown',sh:'bash',bash:'bash',yml:'yaml',yaml:'yaml',sql:'sql',kt:'kotlin',swift:'swift',txt:'plaintext'};
+  function detectLang(filename){ const parts=filename.split('.'); const ext=(parts.length>1?parts.pop():'').toLowerCase(); return LANG_MAP[ext] || 'plaintext'; }
+  function stripExt(filename){ const i=filename.lastIndexOf('.'); return i>0?filename.slice(0,i):filename; }
+  function fmtSize(bytes){ if(bytes<1024) return bytes+' B'; if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB'; return (bytes/1024/1024).toFixed(2)+' MB'; }
+  function reducedMotion(){
+    try{ return typeof matchMedia==='function' && matchMedia('(prefers-reduced-motion: reduce)').matches; }
+    catch(e){ return false; }
+  }
+
+  /* ============================================================
+     STATE
+     ============================================================ */
+  const fileA={name:null,lines:null,lang:null,size:0};
+  const fileB={name:null,lines:null,lang:null,size:0};
+  let diffRows=[], totalHunks=0, currentHunk=-1, viewMode='split';
+  let collapseMode=true, expandedFolds=new Set();
+  let searchMatches=[], searchIndex=-1, currentSearchQuery='';
+  let counts={added:0,deleted:0,modified:0,renamed:0,moved:0,unchanged:0};
+
+  /* ============================================================
+     DROPZONES / FILE LOADING
+     ============================================================ */
+  function setupDropzone(el, inputEl, slot){
+    el.addEventListener('click', ()=>inputEl.click());
+    const browseBtn = el.querySelector('.dz-browse');
+    if(browseBtn) browseBtn.addEventListener('click', e=>{ e.stopPropagation(); inputEl.click(); });
+    el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); inputEl.click(); } });
+    inputEl.addEventListener('change', e=>{ if(e.target.files[0]) loadFile(slot, e.target.files[0]); e.target.value=''; });
+    ['dragenter','dragover'].forEach(ev=>el.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); el.classList.add('drag'); }));
+    ['dragleave','drop'].forEach(ev=>el.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); el.classList.remove('drag'); }));
+    el.addEventListener('drop', e=>{ const f=e.dataTransfer.files && e.dataTransfer.files[0]; if(f) loadFile(slot,f); });
+  }
+  setupDropzone(document.getElementById('dzA'), document.getElementById('inputA'), 'A');
+  setupDropzone(document.getElementById('dzB'), document.getElementById('inputB'), 'B');
+
+  function loadFile(slot, file){
+    if(file.size > 8*1024*1024){ alert('That file is larger than 8 MB. Please choose a smaller text/code file.'); return; }
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const content = typeof reader.result==='string' ? reader.result : '';
+      const state = slot==='A'?fileA:fileB;
+      let lines = content.split(/\r\n|\r|\n/);
+      if(lines.length && lines[lines.length-1]==='') lines.pop();
+      state.name=file.name; state.lines=lines; state.lang=detectLang(file.name); state.size=file.size;
+      renderDropzoneFilled(slot);
+      maybeRunDiff();
+    };
+    reader.onerror=()=> alert('Could not read that file as text.');
+    reader.readAsText(file);
+  }
+
+  function freshInnerHTML(slot){
+    return '<svg class="dz-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'+
+      '<div class="dz-label">File '+slot+' · '+(slot==='A'?'original':'changed')+'</div>'+
+      '<div class="dz-hint">Drag a file here, or <b>click to browse</b></div>'+
+      '<button type="button" class="dz-browse">Choose file</button>';
+  }
+
+  function renderDropzoneFilled(slot){
+    const dz=document.getElementById(slot==='A'?'dzA':'dzB');
+    const inner=document.getElementById(slot==='A'?'dzAInner':'dzBInner');
+    const st=slot==='A'?fileA:fileB;
+    dz.classList.add('filled');
+    inner.innerHTML =
+      '<div class="dz-file"><div><div class="dz-label">File '+slot+' · '+(slot==='A'?'original':'changed')+'</div>'+
+      '<div class="fname">'+esc(st.name)+'</div>'+
+      '<div class="fmeta">'+st.lines.length+' lines · '+fmtSize(st.size)+'</div>'+
+      '<span class="lang-badge">'+st.lang+'</span></div>'+
+      '<button type="button" class="dz-clear" aria-label="Remove file '+slot+'" title="Remove">&times;</button></div>';
+    inner.querySelector('.dz-clear').addEventListener('click', e=>{
+      e.stopPropagation();
+      st.name=null; st.lines=null; st.lang=null; st.size=0;
+      dz.classList.remove('filled');
+      inner.innerHTML=freshInnerHTML(slot);
+      inner.querySelector('.dz-browse').addEventListener('click', e2=>{ e2.stopPropagation(); document.getElementById(slot==='A'?'inputA':'inputB').click(); });
+      document.getElementById('diffStage').classList.remove('active');
+    });
+  }
+
+  /* ============================================================
+     DIFF EXECUTION
+     ============================================================ */
+  function currentOpts(){
+    return {
+      ignoreWS: document.getElementById('optWS').checked,
+      ignoreCase: document.getElementById('optCase').checked,
+      ignoreEmptyLines: document.getElementById('optEmpty').checked,
+      ignoreLineEndings: document.getElementById('optEOL').checked,
+      ignoreComments: document.getElementById('optComments').checked,
+      ignoreFormatting: document.getElementById('optFormat').checked,
+      langA: fileA.lang, langB: fileB.lang
+    };
+  }
+
+  function maybeRunDiff(){
+    if(fileA.lines && fileB.lines){
+      document.getElementById('diffStage').classList.add('active');
+      document.getElementById('largeWarn').style.display = (fileA.lines.length>8000 || fileB.lines.length>8000) ? 'inline' : 'none';
+      setTimeout(runDiff, 10);
+    }
+  }
+
+  function runDiff(){
+    const opts=currentOpts();
+    const {cmpA,cmpB,mapA,mapB} = buildComparisonArrays(fileA.lines, fileB.lines, opts);
+    diffRows = computeDiffRows(fileA.lines, fileB.lines, cmpA, cmpB, mapA, mapB);
+    totalHunks = annotate(diffRows);
+    classifyMoves(diffRows);
+    classifyRenames(diffRows);
+
+    counts={added:0,deleted:0,modified:0,renamed:0,moved:0,unchanged:0};
+    for(const r of diffRows){
+      if(r.cls==='unchanged') counts.unchanged++;
+      else if(r.cls==='added') counts.added++;
+      else if(r.cls==='deleted') counts.deleted++;
+      else if(r.cls==='modified') counts.modified++;
+      else if(r.cls==='renamed') counts.renamed++;
+      else if(r.cls==='moved-out') counts.moved++;
+    }
+
+    currentHunk=-1; expandedFolds=new Set(); searchMatches=[]; searchIndex=-1;
+    document.getElementById('searchInput').value=''; currentSearchQuery=''; document.getElementById('searchCount').textContent='';
+
+    updateStatsAndSummary();
+    updateHunkLabel();
+    render();
+  }
+
+  /* ============================================================
+     FOLD PLAN
+     ============================================================ */
+  function buildRenderPlan(){
+    const plan=[]; const CONTEXT=3, MIN_RUN=CONTEXT*2+3;
+    let i=0;
+    while(i<diffRows.length){
+      if(diffRows[i].type==='equal'){
+        let j=i; while(j<diffRows.length && diffRows[j].type==='equal') j++;
+        const runLen=j-i;
+        if(collapseMode && runLen>MIN_RUN){
+          const foldId=i+'-'+j;
+          for(let r=i;r<i+CONTEXT;r++) plan.push({kind:'row', rowIndex:r});
+          if(expandedFolds.has(foldId)){
+            for(let r=i+CONTEXT;r<j-CONTEXT;r++) plan.push({kind:'row', rowIndex:r});
+          } else {
+            plan.push({kind:'fold', foldId, count:(j-CONTEXT)-(i+CONTEXT), startRow:i+CONTEXT, endRow:j-CONTEXT-1});
+          }
+          for(let r=j-CONTEXT;r<j;r++) plan.push({kind:'row', rowIndex:r});
+        } else {
+          for(let r=i;r<j;r++) plan.push({kind:'row', rowIndex:r});
+        }
+        i=j;
+      } else { plan.push({kind:'row', rowIndex:i}); i++; }
+    }
+    return plan;
+  }
+
+  function moveRefLabel(row){
+    const other = diffRows[row.moveRef];
+    if(!other) return '';
+    if(row.cls==='moved-out') return 'moved → line '+other.bNum;
+    return 'moved ← line '+other.aNum;
+  }
+  function badgeFor(row){
+    if(row.cls==='renamed') return '<span class="badge badge-mod">renamed</span>';
+    if(row.cls==='moved-out' || row.cls==='moved-in') return '<span class="badge badge-move">'+moveRefLabel(row)+'</span>';
+    return '';
+  }
+  function foldDividerHTML(item){
+    return '<div class="fold-divider" data-fold="'+item.foldId+'"><span class="line"></span>⋯ '+item.count+' unchanged line'+(item.count===1?'':'s')+' ⋯ click to expand<span class="line"></span></div>';
+  }
+
+  /* ============================================================
+     RENDER
+     ============================================================ */
+  function render(){
+    const panel=document.getElementById('diffPanel');
+    const wrap=document.getElementById('optWrap').checked;
+    panel.className='diff-panel'+(wrap?' wrap':'');
+    if(diffRows.length===0){ panel.innerHTML='<div class="empty-diff-msg">No lines to compare.</div>'; return; }
+    const plan=buildRenderPlan();
+    let html='';
+    if(viewMode==='split') html=renderSplit(plan);
+    else if(viewMode==='unified') html=renderUnified(plan);
+    else html=renderInlineView(plan);
+    panel.innerHTML=html;
+    if(currentSearchQuery) applySearchHighlight(currentSearchQuery);
+    minimapDraw();
+  }
+
+  function renderSplit(plan){
+    let html='';
+    for(const item of plan){
+      if(item.kind==='fold'){ html+=foldDividerHTML(item); continue; }
+      const r=diffRows[item.rowIndex]; const ridx=item.rowIndex;
+      if(r.type==='equal'){
+        html+='<div class="drow split" data-ridx="'+ridx+'">'+
+          '<div class="gutter a">'+r.aNum+'</div><div class="cell">'+highlightLine(r.aLine, fileA.lang)+'</div>'+
+          '<div class="gutter b">'+r.bNum+'</div><div class="cell">'+highlightLine(r.bLine, fileB.lang)+'</div></div>';
+      } else if(r.type==='add'){
+        const cls = r.cls==='moved-in' ? 'moved-in' : 'add';
+        html+='<div class="drow split add" data-ridx="'+ridx+'">'+
+          '<div class="gutter a"></div><div class="cell empty"></div>'+
+          '<div class="gutter b">'+r.bNum+'</div><div class="cell '+cls+'">'+highlightLine(r.bLine, fileB.lang)+badgeFor(r)+'</div></div>';
+      } else if(r.type==='del'){
+        const cls = r.cls==='moved-out' ? 'moved-out' : 'del';
+        html+='<div class="drow split del" data-ridx="'+ridx+'">'+
+          '<div class="gutter a">'+r.aNum+'</div><div class="cell '+cls+'">'+highlightLine(r.aLine, fileA.lang)+badgeFor(r)+'</div>'+
+          '<div class="gutter b"></div><div class="cell empty"></div></div>';
+      } else {
+        const wd=wordDiff(r.aLine, r.bLine);
+        html+='<div class="drow split mod" data-ridx="'+ridx+'">'+
+          '<div class="gutter a">'+r.aNum+'</div><div class="cell mod-a">'+wd.htmlA+'</div>'+
+          '<div class="gutter b">'+r.bNum+'</div><div class="cell mod-b">'+wd.htmlB+badgeFor(r)+'</div></div>';
+      }
+    }
+    return html;
+  }
+
+  function renderUnified(plan){
+    let html='';
+    for(const item of plan){
+      if(item.kind==='fold'){ html+=foldDividerHTML(item); continue; }
+      const r=diffRows[item.rowIndex]; const ridx=item.rowIndex;
+      if(r.type==='equal'){
+        html+='<div class="drow linear" data-ridx="'+ridx+'"><div class="marker">&nbsp;</div><div class="gutter a">'+r.aNum+'</div><div class="gutter b">'+r.bNum+'</div>'+
+          '<div class="cell">'+highlightLine(r.aLine, fileA.lang)+'</div></div>';
+      } else if(r.type==='add'){
+        const cls = r.cls==='moved-in' ? 'moved-in' : 'add';
+        const rowCls = r.cls==='moved-in' ? 'moved' : 'add';
+        html+='<div class="drow linear '+rowCls+'" data-ridx="'+ridx+'"><div class="marker">+</div><div class="gutter a"></div><div class="gutter b">'+r.bNum+'</div>'+
+          '<div class="cell '+cls+'">'+highlightLine(r.bLine, fileB.lang)+badgeFor(r)+'</div></div>';
+      } else if(r.type==='del'){
+        const cls = r.cls==='moved-out' ? 'moved-out' : 'del';
+        const rowCls = r.cls==='moved-out' ? 'moved' : 'del';
+        html+='<div class="drow linear '+rowCls+'" data-ridx="'+ridx+'"><div class="marker">-</div><div class="gutter a">'+r.aNum+'</div><div class="gutter b"></div>'+
+          '<div class="cell '+cls+'">'+highlightLine(r.aLine, fileA.lang)+badgeFor(r)+'</div></div>';
+      } else {
+        const wd=wordDiff(r.aLine, r.bLine);
+        html+='<div class="drow linear mod" data-ridx="'+ridx+'"><div class="marker">-</div><div class="gutter a">'+r.aNum+'</div><div class="gutter b"></div>'+
+          '<div class="cell mod-a">'+wd.htmlA+'</div></div>';
+        html+='<div class="drow linear mod" data-ridx="'+ridx+'"><div class="marker">+</div><div class="gutter a"></div><div class="gutter b">'+r.bNum+'</div>'+
+          '<div class="cell mod-b">'+wd.htmlB+badgeFor(r)+'</div></div>';
+      }
+    }
+    return html;
+  }
+
+  function renderInlineView(plan){
+    let html='';
+    for(const item of plan){
+      if(item.kind==='fold'){ html+=foldDividerHTML(item); continue; }
+      const r=diffRows[item.rowIndex]; const ridx=item.rowIndex;
+      if(r.type==='equal'){
+        html+='<div class="drow linear inline" data-ridx="'+ridx+'"><div class="marker">&nbsp;</div><div class="gutter a">'+r.aNum+'</div><div class="gutter b">'+r.bNum+'</div>'+
+          '<div class="cell">'+highlightLine(r.aLine, fileA.lang)+'</div></div>';
+      } else if(r.type==='add'){
+        const cls = r.cls==='moved-in' ? 'moved-in' : 'add';
+        const rowCls = r.cls==='moved-in' ? 'moved' : 'add';
+        html+='<div class="drow linear inline '+rowCls+'" data-ridx="'+ridx+'"><div class="marker">+</div><div class="gutter a"></div><div class="gutter b">'+r.bNum+'</div>'+
+          '<div class="cell '+cls+'">'+highlightLine(r.bLine, fileB.lang)+badgeFor(r)+'</div></div>';
+      } else if(r.type==='del'){
+        const cls = r.cls==='moved-out' ? 'moved-out' : 'del';
+        const rowCls = r.cls==='moved-out' ? 'moved' : 'del';
+        html+='<div class="drow linear inline '+rowCls+'" data-ridx="'+ridx+'"><div class="marker">-</div><div class="gutter a">'+r.aNum+'</div><div class="gutter b"></div>'+
+          '<div class="cell '+cls+'">'+highlightLine(r.aLine, fileA.lang)+badgeFor(r)+'</div></div>';
+      } else {
+        html+='<div class="drow linear inline mod" data-ridx="'+ridx+'"><div class="marker">~</div><div class="gutter a">'+r.aNum+'</div><div class="gutter b">'+r.bNum+'</div>'+
+          '<div class="cell mod-b">'+wordDiffInline(r.aLine, r.bLine)+badgeFor(r)+'</div></div>';
+      }
+    }
+    return html;
+  }
+
+  panel_delegate();
+  function panel_delegate(){
+    document.getElementById('diffPanel').addEventListener('click', e=>{
+      const fold=e.target.closest('.fold-divider');
+      if(fold){ expandedFolds.add(fold.dataset.fold); render(); }
+    });
+  }
+
+  /* ============================================================
+     STATS + SUMMARY PANEL
+     ============================================================ */
+  function updateStatsAndSummary(){
+    document.getElementById('statsBar').innerHTML =
+      '<span class="filenames"><b>'+esc(fileA.name)+'</b> vs <b>'+esc(fileB.name)+'</b></span>'+
+      '<span class="stat"><span class="dot moss"></span>'+counts.added+' added</span>'+
+      '<span class="stat"><span class="dot rust"></span>'+counts.deleted+' removed</span>'+
+      '<span class="stat"><span class="dot mod"></span>'+counts.modified+' modified</span>'+
+      (counts.moved ? '<span class="stat"><span class="dot violet"></span>'+counts.moved+' moved</span>' : '');
+    document.getElementById('printTitle').textContent = fileA.name+' vs '+fileB.name+'  —  +'+counts.added+' -'+counts.deleted+' ~'+counts.modified+(counts.moved?' ⇄'+counts.moved:'');
+
+    const total = diffRows.length || 1;
+    const similarity = Math.round((counts.unchanged/total)*100);
+    document.getElementById('summaryGrid').innerHTML =
+      card('added','Added',counts.added)+card('deleted','Deleted',counts.deleted)+
+      card('modified','Modified',counts.modified)+card('renamed','Renamed',counts.renamed)+
+      card('moved','Moved blocks',countMovedBlocks())+card('','Unchanged',counts.unchanged)+
+      card('','Similarity',similarity+'%');
+  }
+  function countMovedBlocks(){
+    const ids=new Set(); for(const r of diffRows) if(r.cls==='moved-out') ids.add(r.moveId); return ids.size;
+  }
+  function card(cls,label,num){
+    return '<div class="summary-card '+cls+'"><div class="num">'+num+'</div><div class="lbl">'+label+'</div></div>';
+  }
+
+  document.getElementById('summaryToggle').addEventListener('click', ()=>{
+    const el=document.getElementById('summaryCollapse');
+    const btn=document.getElementById('summaryToggle');
+    el.classList.toggle('open'); btn.classList.toggle('open');
+  });
+
+  /* ============================================================
+     HUNK NAVIGATION
+     ============================================================ */
+  function updateHunkLabel(){
+    const label=document.getElementById('hunkLabel');
+    const prev=document.getElementById('prevHunk'), next=document.getElementById('nextHunk');
+    if(totalHunks===0){ label.textContent='no changes'; prev.disabled=true; next.disabled=true; return; }
+    prev.disabled=false; next.disabled=false;
+    label.textContent=(currentHunk<0?'—':(currentHunk+1))+' of '+totalHunks;
+  }
+  function gotoHunk(delta){
+    if(totalHunks===0) return;
+    currentHunk=((currentHunk+delta)%totalHunks+totalHunks)%totalHunks;
+    const firstRowOfHunk = diffRows.findIndex(r=>r.hunk===currentHunk);
+    if(firstRowOfHunk>=0) scrollToRow(firstRowOfHunk);
+    updateHunkLabel();
+  }
+  document.getElementById('nextHunk').addEventListener('click', ()=>gotoHunk(1));
+  document.getElementById('prevHunk').addEventListener('click', ()=>gotoHunk(-1));
+  document.addEventListener('keydown', e=>{
+    if(!document.getElementById('diffStage').classList.contains('active')) return;
+    if(e.target.tagName==='INPUT') return;
+    if(e.key==='n') gotoHunk(1); else if(e.key==='p') gotoHunk(-1);
+  });
+
+  function scrollToRow(rowIndex){
+    let el=document.querySelector('.diff-panel [data-ridx="'+rowIndex+'"]');
+    if(!el){
+      const plan=buildRenderPlan();
+      const foldItem=plan.find(p=>p.kind==='fold' && rowIndex>=p.startRow && rowIndex<=p.endRow);
+      if(foldItem){ expandedFolds.add(foldItem.foldId); render(); el=document.querySelector('.diff-panel [data-ridx="'+rowIndex+'"]'); }
+    }
+    if(el){
+      el.scrollIntoView({block:'center', behavior: reducedMotion()?'auto':'smooth'});
+      el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'), 900);
+    }
+  }
+
+  /* ============================================================
+     SEARCH
+     ============================================================ */
+  let searchDebounce=null;
+  document.getElementById('searchInput').addEventListener('input', e=>{
+    clearTimeout(searchDebounce);
+    searchDebounce=setTimeout(()=>runSearch(e.target.value), 150);
+  });
+  document.getElementById('searchInput').addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); if(e.shiftKey) gotoMatch(searchIndex-1); else gotoMatch(searchIndex+1); }
+  });
+  document.getElementById('searchNext').addEventListener('click', ()=>gotoMatch(searchIndex+1));
+  document.getElementById('searchPrev').addEventListener('click', ()=>gotoMatch(searchIndex-1));
+
+  function runSearch(query){
+    currentSearchQuery=query.trim();
+    searchMatches=[];
+    if(currentSearchQuery){
+      const q=currentSearchQuery.toLowerCase();
+      diffRows.forEach((r,idx)=>{
+        const inA = typeof r.aLine==='string' && r.aLine.toLowerCase().includes(q);
+        const inB = typeof r.bLine==='string' && r.bLine.toLowerCase().includes(q);
+        if(inA||inB) searchMatches.push(idx);
+      });
+    }
+    searchIndex = searchMatches.length ? 0 : -1;
+    updateSearchUI();
+    applySearchHighlight(currentSearchQuery);
+    if(searchIndex>=0) scrollToRow(searchMatches[searchIndex]);
+  }
+  function gotoMatch(i){
+    if(!searchMatches.length) return;
+    searchIndex=((i%searchMatches.length)+searchMatches.length)%searchMatches.length;
+    updateSearchUI();
+    scrollToRow(searchMatches[searchIndex]);
+  }
+  function updateSearchUI(){
+    const el=document.getElementById('searchCount');
+    el.textContent = currentSearchQuery ? (searchMatches.length? (searchIndex+1)+' / '+searchMatches.length : '0 / 0') : '';
+  }
+  function clearSearchHighlight(){
+    document.querySelectorAll('#diffPanel mark.search-hit').forEach(m=>{
+      const parent=m.parentNode; if(!parent) return;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+  }
+  function applySearchHighlight(query){
+    clearSearchHighlight();
+    if(!query) return;
+    const q=query.toLowerCase();
+    document.querySelectorAll('#diffPanel .cell').forEach(cell=>highlightTextNodes(cell, q));
+  }
+  function highlightTextNodes(root, q){
+    const walker=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    const nodes=[]; let n; while(n=walker.nextNode()) nodes.push(n);
+    for(const tn of nodes){
+      const text=tn.nodeValue; const lower=text.toLowerCase();
+      let idx=lower.indexOf(q);
+      if(idx===-1) continue;
+      const frag=document.createDocumentFragment(); let last=0;
+      while(idx!==-1){
+        if(idx>last) frag.appendChild(document.createTextNode(text.slice(last,idx)));
+        const mark=document.createElement('mark'); mark.className='search-hit'; mark.textContent=text.slice(idx, idx+q.length);
+        frag.appendChild(mark);
+        last=idx+q.length; idx=lower.indexOf(q, last);
+      }
+      if(last<text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      if(tn.parentNode) tn.parentNode.replaceChild(frag, tn);
+    }
+  }
+
+  /* ============================================================
+     MINIMAP
+     ============================================================ */
+  const RANK={'unchanged':0,'added':2,'deleted':2,'modified':3,'renamed':3,'moved-out':4,'moved-in':4};
+  const MM_COLORS={'added':'#52B182','deleted':'#CB6248','modified':'#E3A23C','renamed':'#E3A23C','moved-out':'#9C8FE0','moved-in':'#9C8FE0'};
+  function minimapDraw(){
+    try{ minimapDrawInner(); } catch(e){ /* minimap is cosmetic — never let it break the app */ }
+  }
+  function minimapDrawInner(){
+    const canvas=document.getElementById('minimap'), wrap=document.getElementById('minimapWrap'), panel=document.getElementById('diffPanel');
+    if(!canvas || !wrap || !panel) return;
+    const dpr=window.devicePixelRatio||1;
+    const w=Math.max(1, Math.floor(wrap.clientWidth));
+    const h=Math.max(1, Math.floor(panel.clientHeight || 1));
+    canvas.width=Math.floor(w*dpr); canvas.height=Math.floor(h*dpr);
+    canvas.style.width=w+'px'; canvas.style.height=h+'px';
+    const ctx=canvas.getContext && canvas.getContext('2d');
+    if(!ctx){ drawViewport(); return; }
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,w,h);
+    const n=diffRows.length;
+    if(n>0){
+      for(let py=0; py<h; py++){
+        const rowStart=Math.floor(py/h*n);
+        const rowEnd=Math.max(rowStart+1, Math.floor((py+1)/h*n));
+        let best='unchanged';
+        for(let r=rowStart; r<rowEnd && r<n; r++){
+          const c=diffRows[r].cls || 'unchanged';
+          if((RANK[c]||0) > (RANK[best]||0)) best=c;
+        }
+        if(best!=='unchanged'){ ctx.fillStyle=MM_COLORS[best]||'#888'; ctx.fillRect(0,py,w,1); }
+      }
+    }
+    drawViewport();
+  }
+  function drawViewport(){
+    const vp=document.getElementById('minimapViewport'), panel=document.getElementById('diffPanel');
+    if(!vp || !panel) return;
+    const h=panel.clientHeight, scrollH=panel.scrollHeight;
+    if(scrollH<=h+1){ vp.style.display='none'; return; }
+    vp.style.display='block';
+    vp.style.top=((panel.scrollTop/scrollH)*h)+'px';
+    vp.style.height=Math.max(6,(h/scrollH)*h)+'px';
+  }
+  document.getElementById('diffPanel').addEventListener('scroll', drawViewport);
+  window.addEventListener('resize', ()=>minimapDraw());
+  document.getElementById('minimap').addEventListener('click', e=>{
+    const rect=e.currentTarget.getBoundingClientRect();
+    const frac=(e.clientY-rect.top)/rect.height;
+    const rowIdx=Math.max(0, Math.min(diffRows.length-1, Math.floor(frac*diffRows.length)));
+    scrollToRow(rowIdx);
+  });
+
+  /* ============================================================
+     OPTIONS WIRING
+     ============================================================ */
+  ['optWS','optCase','optEmpty','optEOL','optComments','optFormat'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', runDiff);
+  });
+  document.getElementById('optWrap').addEventListener('change', render);
+  document.getElementById('optCollapse').addEventListener('change', e=>{ collapseMode=e.target.checked; expandedFolds=new Set(); render(); });
+
+  document.querySelectorAll('#viewSeg button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(btn.disabled) return;
+      document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active'); viewMode=btn.dataset.mode; render();
+    });
+  });
+  function forceNarrowLayout(){
+    const splitBtn=document.querySelector('#viewSeg button[data-mode="split"]');
+    if(window.innerWidth<720){
+      if(viewMode==='split'){
+        const unifiedBtn=document.querySelector('#viewSeg button[data-mode="unified"]');
+        splitBtn.classList.remove('active'); unifiedBtn.classList.add('active'); viewMode='unified'; render();
+      }
+      splitBtn.disabled=true; splitBtn.title='Widen the window for split view';
+    } else { splitBtn.disabled=false; splitBtn.title=''; }
+  }
+  window.addEventListener('resize', forceNarrowLayout);
+  forceNarrowLayout();
+
+  /* ============================================================
+     EXPORT
+     ============================================================ */
+  document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+  document.getElementById('btnImage').addEventListener('click', ()=>{
+    const panel=document.getElementById('diffPanel');
+    if(typeof html2canvas==='undefined'){ alert('Image export needs an internet connection to load html2canvas.'); return; }
+    html2canvas(panel, {backgroundColor:'#141C1F', scale:2}).then(canvas=>{
+      const a=document.createElement('a');
+      a.download=stripExt(fileA.name)+'_vs_'+stripExt(fileB.name)+'.png';
+      a.href=canvas.toDataURL('image/png');
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+  });
+  function downloadBlob(text, filename, type){
+    const blob=new Blob([text],{type}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  }
+  document.getElementById('btnPatch').addEventListener('click', ()=>{
+    let out='--- a/'+fileA.name+'\n+++ b/'+fileB.name+'\n';
+    out+='@@ -1,'+fileA.lines.length+' +1,'+fileB.lines.length+' @@\n';
+    for(const r of diffRows){
+      if(r.type==='equal') out+=' '+r.aLine+'\n';
+      else if(r.type==='add') out+='+'+r.bLine+'\n';
+      else if(r.type==='del') out+='-'+r.aLine+'\n';
+      else out+='-'+r.aLine+'\n+'+r.bLine+'\n';
+    }
+    downloadBlob(out, stripExt(fileA.name)+'_vs_'+stripExt(fileB.name)+'.diff', 'text/plain');
+  });
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    ['A','B'].forEach(slot=>{
+      const st=slot==='A'?fileA:fileB;
+      st.name=null; st.lines=null; st.lang=null; st.size=0;
+      const dz=document.getElementById(slot==='A'?'dzA':'dzB');
+      dz.classList.remove('filled');
+      const inner=document.getElementById(slot==='A'?'dzAInner':'dzBInner');
+      inner.innerHTML=freshInnerHTML(slot);
+      inner.querySelector('.dz-browse').addEventListener('click', e=>{ e.stopPropagation(); document.getElementById(slot==='A'?'inputA':'inputB').click(); });
+    });
+    document.getElementById('diffStage').classList.remove('active');
+    diffRows=[]; totalHunks=0; currentHunk=-1;
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+})();
+</script>
+</body>
+</html>

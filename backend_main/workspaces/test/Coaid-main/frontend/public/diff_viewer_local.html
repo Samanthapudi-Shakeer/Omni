@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diff Viewer — diff_viewer_local</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --panel-2: #f2f4f7; --border: #e1e5eb;
+    --text: #1f2430; --text-dim: #6b7280; --accent: #4f46e5;
+    --green: #16a34a; --red: #dc2626; --amber: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    padding: 28px;
+  }
+  h1 { font-size: 16px; margin: 0 0 4px; font-family: system-ui, sans-serif; }
+  .sub { color: var(--text-dim); font-size: 12px; margin-bottom: 20px; }
+  .files { display: flex; flex-direction: column; gap: 4px; margin-bottom: 18px; }
+  .file-row { display: flex; gap: 8px; align-items: center; font-size: 12.5px; }
+  .badge { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 4px; font-size: 10px; font-weight: 700; background: var(--panel-2); }
+  .badge.A { color: var(--green); background: #16a34a1a; }
+  .badge.M { color: var(--amber); background: #d977061a; }
+  .badge.D { color: var(--red); background: #dc26261a; }
+  .diff-box { background: #1b1f27; border: 1px solid var(--border); border-radius: 10px; padding: 4px 0;
+    overflow: auto; font-size: 12.5px; line-height: 1.5; }
+  .diff-line { padding: 1px 16px; white-space: pre; color: #cbd2de; }
+  .diff-line.add { background: #16a34a26; color: #7ee0a0; }
+  .diff-line.del { background: #dc262626; color: #f5a3a0; }
+  .diff-line.hunk { background: #4f46e526; color: #a9a4f7; font-weight: 600; }
+  .diff-line.meta { color: #7d8595; }
+  .empty { color: var(--text-dim); font-style: italic; font-family: system-ui, sans-serif; }
+</style>
+</head>
+<body>
+  <h1>Diff Viewer</h1>
+  <div class="sub" id="meta">Loading…</div>
+  <div class="files" id="files"></div>
+  <div class="diff-box" id="diff-content"><div class="empty">No diff data found in this tab's session storage.</div></div>
+
+  <script>
+    // ------------------------------------------------------------------
+    // Placeholder viewer. The app hands off diff data here via
+    // sessionStorage under 'aider_diff_payload' right before opening this
+    // page in a new tab. This stub renders a basic line-colored diff as a
+    // working fallback -- replace/extend as you like.
+    //
+    // Payload shape:
+    // {
+    //   workspace: string,
+    //   changedFiles: [{ status: 'A'|'M'|'D', path: string }],
+    //   commits: string[],
+    //   diff: string,        // full unified diff text (git diff format)
+    //   generatedAt: number  // epoch ms
+    // }
+    // ------------------------------------------------------------------
+    function classify(line) {
+      if (line.startsWith('+++') || line.startsWith('---')) return 'meta';
+      if (line.startsWith('+')) return 'add';
+      if (line.startsWith('-')) return 'del';
+      if (line.startsWith('@@')) return 'hunk';
+      if (line.startsWith('diff ') || line.startsWith('index ')) return 'meta';
+      return '';
+    }
+
+    try {
+      const raw = sessionStorage.getItem('aider_diff_payload');
+      if (raw) {
+        const payload = JSON.parse(raw);
+        document.getElementById('meta').textContent =
+          `${payload.workspace || 'workspace'} — ${payload.changedFiles.length} file(s) changed`;
+
+        const filesEl = document.getElementById('files');
+        payload.changedFiles.forEach((f) => {
+          const row = document.createElement('div');
+          row.className = 'file-row';
+          row.innerHTML = `<span class="badge ${f.status}">${f.status}</span><span>${f.path}</span>`;
+          filesEl.appendChild(row);
+        });
+
+        const diffEl = document.getElementById('diff-content');
+        diffEl.innerHTML = '';
+        (payload.diff || 'No diff text.').split('\n').forEach((line) => {
+          const div = document.createElement('div');
+          div.className = 'diff-line ' + classify(line);
+          div.textContent = line || ' ';
+          diffEl.appendChild(div);
+        });
+
+        // TODO: replace this with your own diff renderer. `payload.diff`
+        // is a standard unified diff (git diff format).
+      }
+    } catch (err) {
+      document.getElementById('meta').textContent = 'Could not read diff payload: ' + err.message;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+Static Code Analysis Report
+============================
+
+Files analyzed: factorial.py
+Total findings: 1
+
+--- AI Summary ------------------------------------------------------------
+Summary Report for factorial.py
+
+Headings:
+Severity Groupings
+
+Errors:
+- Parsing failed on line 6: 'expected an indented block after function definition on line 5' (factorial)
+
+Most Important Issues:
+- The syntax error indicates that the code block following the function definition on line 5 is not properly indented, which will prevent the script from running.
+
+Recurring Patterns:
+- There is only one finding, but the pattern of indentation issues can be common in Python scripts.
+
+Action List:
+- Prioritize fixing the indentation on line 6 to resolve the parsing error.
+- Review the entire file for consistent indentation to prevent similar issues.
+
+--- Raw Findings ----------------------------------------------------------
+[ERROR] factorial.py:6 (pylint/syntax-error) - Parsing failed: 'expected an indented block after function definition on line 5 (factorial, line 6)'

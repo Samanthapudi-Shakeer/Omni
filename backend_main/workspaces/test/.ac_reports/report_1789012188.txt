@@ -1,0 +1,65 @@
+Static Code Analysis Report
+============================
+
+Files analyzed: chess.py
+Total findings: 26
+
+--- AI Summary ------------------------------------------------------------
+Summary Report for chess.py
+
+SEVERITY: ERROR
+- Unable to import 'streamlit' (line 1): This is a critical issue that prevents the module from running if 'streamlit' is not installed or recognized.
+- Module import itself (line 2): This is unusual and may be a typo or misunderstanding of the import statement syntax.
+- Module 'chess' has no 'Board' member (lines 9, 14): This indicates a misuse of the 'chess' library's API; the correct class or method name should be used.
+- Module 'chess' has no 'square' member (line 29): Similar to the above, the 'chess' library does not have a 'square' member as used here.
+- Module 'chess' has no 'Move' member (line 63): This could mean the developer is trying to use a non-existent class or method; 'move' might be the intended member.
+- Module 'chess' has no 'QUEEN' member (line 66): The 'chess' library likely uses a different naming convention for piece types.
+- Module 'chess' has no 'WHITE' member (lines 75, 82): Similar to the QUEEN issue, the correct constant for player color should be used.
+
+SEVERITY: WARNING
+- Redefining name 'piece' from outer scope (line 20): This can lead to confusion and bugs, as the inner 'piece' variable shadows the outer one.
+
+SEVERITY: CONVENTION
+- Trailing whitespace (lines 32, 35, 39, 43, 44, 48, 52, 67): This does not affect functionality but is against coding standards and may cause unnecessary diffs in version control.
+- Missing module docstring (line 1): A module-level docstring helps others understand the purpose and functionality of the module.
+- Missing function or method docstring (lines 13, 20): Function-level docstrings are important for code readability and maintainability.
+- Constant name "bg_color", "bg_color", "btn_key", "winner", "turn_text" do not conform to UPPER_CASE naming style (lines 34, 38, 41, 75, 82): Constants in Python should be named in all uppercase.
+
+Recurring Patterns:
+- Multiple 'no-member' errors related to the 'chess' module suggest issues with how the library is being used.
+- Naming convention issues for constants and variables indicate a need for adherence to Python's PEP 8 style guide.
+
+Action List:
+1. Resolve the import errors, especially the inability to import 'streamlit' and the self-import.
+2. Correct the usage of the 'chess' library by referring to the correct class and method names.
+3. Rename constants to use uppercase as per PEP 8 conventions.
+4. Add missing module and function docstrings for better code documentation.
+5. Remove trailing whitespace from lines where it appears.
+
+--- Raw Findings ----------------------------------------------------------
+[CONVENTION] chess.py:32 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:35 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:39 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:43 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:44 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:48 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:52 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:67 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:1 (pylint/missing-module-docstring) - Missing module docstring
+[ERROR] chess.py:1 (pylint/import-error) - Unable to import 'streamlit'
+[WARNING] chess.py:2 (pylint/import-self) - Module import itself
+[ERROR] chess.py:9 (pylint/no-member) - Module 'chess' has no 'Board' member
+[CONVENTION] chess.py:13 (pylint/missing-function-docstring) - Missing function or method docstring
+[ERROR] chess.py:14 (pylint/no-member) - Module 'chess' has no 'Board' member
+[CONVENTION] chess.py:20 (pylint/missing-function-docstring) - Missing function or method docstring
+[WARNING] chess.py:20 (pylint/redefined-outer-name) - Redefining name 'piece' from outer scope (line 31)
+[ERROR] chess.py:29 (pylint/no-member) - Module 'chess' has no 'square' member
+[CONVENTION] chess.py:34 (pylint/invalid-name) - Constant name "bg_color" doesn't conform to UPPER_CASE naming style
+[CONVENTION] chess.py:38 (pylint/invalid-name) - Constant name "bg_color" doesn't conform to UPPER_CASE naming style
+[CONVENTION] chess.py:41 (pylint/invalid-name) - Constant name "btn_key" doesn't conform to UPPER_CASE naming style
+[ERROR] chess.py:63 (pylint/no-member) - Module 'chess' has no 'Move' member; maybe 'move'?
+[ERROR] chess.py:66 (pylint/no-member) - Module 'chess' has no 'QUEEN' member
+[CONVENTION] chess.py:75 (pylint/invalid-name) - Constant name "winner" doesn't conform to UPPER_CASE naming style
+[ERROR] chess.py:75 (pylint/no-member) - Module 'chess' has no 'WHITE' member
+[CONVENTION] chess.py:82 (pylint/invalid-name) - Constant name "turn_text" doesn't conform to UPPER_CASE naming style
+[ERROR] chess.py:82 (pylint/no-member) - Module 'chess' has no 'WHITE' member

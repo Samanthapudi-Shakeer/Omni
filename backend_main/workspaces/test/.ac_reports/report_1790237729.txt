@@ -1,0 +1,334 @@
+Static Code Analysis Report
+============================
+
+Files analyzed: frontend/vite.config.js, frontend/src/components/QuestionPrompt.jsx, frontend/src/components/WorkspaceBar.jsx, frontend/src/components/StatusBar.jsx, frontend/src/components/CommandPalette.jsx, frontend/src/components/Toasts.jsx, frontend/src/components/Composer.jsx, frontend/src/components/CodeCanvas.jsx, frontend/src/components/RenameDownloadModal.jsx, frontend/src/components/TerminalView.jsx, frontend/src/components/SupervisedView.jsx, frontend/src/components/DiffView.jsx, frontend/src/components/SaveFileModal.jsx, frontend/src/components/Sidebar.jsx, frontend/src/styles.css, frontend/src/App.jsx, frontend/src/api.js, frontend/src/main.jsx, frontend/src/useAiderSocket.js, frontend/public/diff_viewer_local.html, frontend/index.html, frontend/package-lock.json, frontend/package.json, backend/requirements.txt, backend/app/main.py, backend/app/ws_manager.py, backend/app/ollama_client.py, backend/app/workspace_manager.py, backend/app/config.py, backend/app/__init__.py, backend/app/ollama_tools.py, backend/app/pylint_runner.py, backend/app/workspace_fs.py, backend/app/aider_session.py, backend/app/git_utils.py, backend/app/commands_library.py, backend/run.py, backend/.env.example, README.md
+Total findings: 115
+
+--- AI Summary ------------------------------------------------------------
+Summary Report
+
+SEVERITY: ERROR
+- backend/app/aider_session.py:44 - Parse error in regular expression.
+- backend/app/commands_library.py:19 - Parse error in command definition.
+- backend/app/git_utils.py:64 - Parse error in file handling.
+- backend/app/main.py:52 - Parse error in exception handling.
+- backend/app/ollama_tools.py:37 - Parse error in function description.
+- backend/app/pylint_runner.py:36 - Parse error in function return type.
+- backend/app/workspace_fs.py:11 - Parse error in function description.
+- backend/app/workspace_manager.py:62 - Parse error in function definition.
+- frontend/src/App.jsx:121 - Unexpected token.
+- frontend/src/api.js:25 - Unexpected token.
+- frontend/src/components/CodeCanvas.jsx:24 - Unexpected token.
+- frontend/src/components/CommandPalette.jsx:24 - Unexpected token.
+- frontend/src/components/Composer.jsx:45 - Unexpected token.
+- frontend/src/components/DiffView.jsx:25 - Unexpected token.
+- frontend/src/components/QuestionPrompt.jsx:37 - Unexpected token.
+- frontend/src/components/SaveFileModal.jsx:31 - Unexpected token.
+- frontend/src/components/StatusBar.jsx:1 - Missing or outdated file header.
+- frontend/src/components/StatusBar.jsx:13 - Function has a complexity of 18, which is greater than 10.
+- frontend/src/components/SupervisedView.jsx:1 - Missing or outdated file header.
+- frontend/src/components/SupervisedView.jsx:7 - Expected { after 'if' condition.
+- frontend/src/components/SupervisedView.jsx:13 - Function has a complexity of 25, which is greater than 10.
+- frontend/src/components/SupervisedView.jsx:36 - Expected { after 'if' condition.
+- frontend/src/components/SupervisedView.jsx:40 - Expected { after 'if' condition.
+- frontend/src/components/SupervisedView.jsx:46 - Expected { after 'if' condition.
+- frontend/src/components/SupervisedView.jsx:47 - Expected { after 'else'.
+- frontend/src/components/SupervisedView.jsx:54 - Expected { after 'if' condition.
+- frontend/src/components/TerminalView.jsx:1 - Missing or outdated file header.
+- frontend/src/components/TerminalView.jsx:54 - Expected { after 'for-of'.
+- frontend/src/components/Toasts.jsx:1 - Missing or outdated file header.
+- frontend/src/components/WorkspaceBar.jsx:1 - Missing or outdated file header.
+- frontend/src/components/WorkspaceBar.jsx:11 - Expected { after 'if' condition.
+- frontend/src/main.jsx:1 - Missing or outdated file header.
+- frontend/src/useAiderSocket.js:1 - Missing or outdated file header.
+- frontend/src/useAiderSocket.js:15 - Expected { after 'if' condition.
+- frontend/src/useAiderSocket.js:30 - Expected { after 'if' condition.
+- frontend/vite.config.js:1 - Missing or outdated file header.
+
+SEVERITY: WARNING
+- frontend/src/components/RenameDownloadModal.jsx:33 - Missing semicolon.
+- frontend/src/components/Sidebar.jsx:161 - Expected corresponding JSX closing tag for <div>.
+- backend/app/ollama_client.py:1 - Missing docstring for module.
+- frontend/src/components/StatusBar.jsx:1 - Insufficient line coverage (4 more lines needed).
+- frontend/src/components/StatusBar.jsx:1 - Insufficient comment density (38 more comment lines needed).
+- frontend/src/components/StatusBar.jsx:13 - Define this declaration in a local scope or bind explicitly the property to the global object.
+- frontend/src/components/StatusBar.jsx:24 - Expected comment to be above code.
+- frontend/src/components/StatusBar.jsx:50 - Ternary operator used.
+- frontend/src/components/StatusBar.jsx:54 - Ternary operator used.
+- frontend/src/components/StatusBar.jsx:55 - This line has 2 statements. Maximum allowed is 1.
+- frontend/src/components/StatusBar.jsx:64 - Ternary operator used.
+- frontend/src/components/StatusBar.jsx:74 - Ternary operator used.
+- frontend/src/components/StatusBar.jsx:77 - Ternary operator used.
+- frontend/src/components/StatusBar.jsx:84 - Ternary operator used.
+- frontend/src/components/StatusBar.jsx:84 - Extract this nested ternary operation into an independent statement.
+- frontend/src/components/StatusBar.jsx:91 - No magic number: 100.
+- frontend/src/components/StatusBar.jsx:92 - Ternary operator used.
+- frontend/src/components/StatusBar.jsx:93 - No magic number: 100.
+- frontend/src/components/StatusBar.jsx:106 - Do not use Array index in keys.
+- frontend/src/components/SupervisedView.jsx:1 - Insufficient line coverage (16 more lines needed).
+- frontend/src/components/SupervisedView.jsx:1 - Insufficient comment density (63 more comment lines needed).
+- frontend/src/components/SupervisedView.jsx:6 - Define this declaration in a local scope or bind explicitly the property to the global object.
+- frontend/src/components/SupervisedView.jsx:7 - No magic number: 60.
+- frontend/src/components/SupervisedView.jsx:8 - No magic number: 60.
+- frontend/src/components/SupervisedView.jsx:9 - No magic number: 60.
+- frontend/src/components/SupervisedView.jsx:13 - Define this declaration in a local scope or bind explicitly the property to the global object.
+- frontend/src/components/SupervisedView.jsx:60 - Ternary operator used.
+- frontend/src/components/SupervisedView.jsx:83 - Remove parentheses around the parameter of this arrow function.
+- frontend/src/components/SupervisedView.jsx:84 - Ternary operator used.
+- frontend/src/components/SupervisedView.jsx:95 - Remove parentheses around the parameter of this arrow function.
+- frontend/src/components/SupervisedView.jsx:116 - Do not use Array index in keys.
+- frontend/src/components/SupervisedView.jsx:140 - Do not use Array index in keys.
+- frontend/src/components/SupervisedView.jsx:140 - Ternary operator used.
+- frontend/src/components/SupervisedView.jsx:170 - Ternary operator used.
+- frontend/src/components/SupervisedView.jsx:175 - Remove parentheses around the parameter of this arrow function.
+- frontend/src/components/TerminalView.jsx:1 - Insufficient line coverage (17 more lines needed).
+- frontend/src/components/TerminalView.jsx:1 - Insufficient comment density (9 more comment lines needed).
+- frontend/src/components/TerminalView.jsx:14 - Define this declaration in a local scope or bind explicitly the property to the global object.
+- frontend/src/components/TerminalView.jsx:39 - Unexpected trailing comma.
+- frontend/src/components/TerminalView.jsx:40 - Unexpected trailing comma.
+- frontend/src/components/TerminalView.jsx:58 - Remove parentheses around the parameter of this arrow function.
+- frontend/src/components/Toasts.jsx:1 - Insufficient line coverage (2 more lines needed).
+- frontend/src/components/Toasts.jsx:1 - Insufficient comment density (5 more comment lines needed).
+- frontend/src/components/Toasts.jsx:5 - Define this declaration in a local scope or bind explicitly the property to the global object.
+- frontend/src/components/Toasts.jsx:8 - Remove parentheses around the parameter of this arrow function.
+- frontend/src/components/WorkspaceBar.jsx:1 - Insufficient line coverage (9 more lines needed).
+- frontend/src/components/WorkspaceBar.jsx:1 - Insufficient comment density (18 more comment lines needed).
+- frontend/src/components/WorkspaceBar.jsx:3 - Define this declaration in a local scope or bind explicitly the property to the global object.
+- frontend/src/components/WorkspaceBar.jsx:37 - Ternary operator used.
+- frontend/src/components/WorkspaceBar.jsx:46 - Remove parentheses around the parameter of this arrow function.
+- frontend/src/components/WorkspaceBar.jsx:32 - Remove parentheses around the parameter of this arrow function.
+- frontend/src/components/WorkspaceBar.jsx:36 - Remove parentheses around the parameter of this arrow function.
+- frontend/src/main.jsx:1 - Insufficient line coverage (1 more lines needed).
+- frontend/src/main.jsx:1 - Insufficient comment density (3 more comment lines needed).
+- frontend/src/main.jsx:9 - Missing trailing comma.
+- frontend/src/useAiderSocket.js:1 - Insufficient line coverage (18 more lines needed).
+- frontend/src/useAiderSocket.js:1 - Insufficient comment density (7 more comment lines needed).
+- frontend/src/useAiderSocket.js:10 - Define this declaration in a local scope or bind explicitly the property to the global object.
+- frontend/src/useAiderSocket.js:22 - Ternary operator used.
+- frontend/src/useAiderSocket.js:24 - Ternary operator used.
+- frontend/src/useAiderSocket.js:30 - Ternary operator used.
+- frontend/src/useAiderSocket.js:30 - No magic number: 2000.
+- frontend/src/useAiderSocket.js:35 - Remove parentheses around the parameter of this arrow function.
+- frontend/vite.config.js:1 - Insufficient comment density (1 more comment line needed).
+- frontend/vite.config.js:14 - Unexpected trailing comma.
+- frontend/vite.config.js:15 - Unexpected trailing comma.
+- frontend/vite.config.js:18 - Unexpected trailing comma.
+- frontend/vite.config.js:19 - Unexpected trailing comma.
+
+RECURRING PATTERNS:
+- Missing or outdated file headers in multiple files.
+- Use of ternary operators in multiple files.
+- Insufficient line coverage and comment density in multiple frontend components.
+- Unexpected trailing commas in multiple files.
+- Parse errors in backend Python files.
+- Unexpected tokens in frontend JavaScript files.
+
+PRIORITIZED ACTION LIST:
+1. Fix parse errors in backend Python files (aider_session.py, commands_library.py, git_utils.py, main.py, ollama_tools.py, pylint_runner.py, workspace_fs.py, workspace_manager.py).
+2. Address unexpected tokens in frontend JavaScript files (App.jsx, api.js, CodeCanvas.jsx, CommandPalette.jsx, Composer.jsx, DiffView.jsx, QuestionPrompt.jsx, SaveFileModal.jsx).
+3. Add or update file headers in all files with missing or outdated headers.
+4. Improve line coverage and comment density in frontend components (StatusBar.jsx, SupervisedView.jsx, TerminalView.jsx, Toasts.jsx, WorkspaceBar.jsx, main.jsx, useAiderSocket.js).
+5. Remove unnecessary trailing commas in all files.
+6. Refactor ternary operators and complex functions to improve readability and maintainability.
+7. Ensure all functions have appropriate docstrings, especially in backend Python files.
+
+--- Raw Findings ----------------------------------------------------------
+[WARNING] backend/app/aider_session.py:44 (sonarqube/python:ParsingError) - Parse error at line 44 column 0:
+
+   33: re.compile(r"Removed\s+(.+?)\s+from the chat", re.IGNORECASE)
+   34: ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[a-zA-Z]|\x1b\].*?\x07|\x1b[=>]")
+   35: 
+   36: 
+   37: 
+   38: 
+   39: 
+   40: QUESTION_RE = re.compile(
+   41:     r"(?P<question>[^\n]*\?)\s*"
+   42:     r"(?P<opts>(?:\([A-Za-z]\)[A-Za-z' ]+(?:/\s*)?)+)?"
+   43: )
+  -->      r"(?:\[[A-Za-z]+\])?\s*:?\s*$"
+   45: )
+   46: OPTION_RE = re.compile(r"\(([A-Za-z])\)([A-Za-z' ]+)")
+   47: 
+   48: 
+   49: 
+   50: PHASE_PATTERNS = [
+   51:     (re.compile(r"scanning|repo.?map|building.*map", re.I
+[REFACTOR] backend/app/aider_session.py:230 (sonarqube/python:S1131) - Remove the useless trailing whitespaces at the end of this line.
+[REFACTOR] backend/app/aider_session.py:421 (sonarqube/python:S1131) - Remove the useless trailing whitespaces at the end of this line.
+[WARNING] backend/app/commands_library.py:19 (sonarqube/python:ParsingError) - Parse error at line 19 column 16:
+
+   16: , "desc": "Undo Aider's last commit, if it was made by Aider.", "immediate": True},
+   17: {"cmd": "/commit", "args": "[message]", "desc": "Commit outstanding changes to the repo, "
+   18:                                                 "optionally with a custom message.", "immediate": True},
+  -->  COMMAND_LITERAL = "<command>"
+   20: {"cmd": "/run", "args": COMMAND_LITERAL, "desc": "Run a shell command and optionally share the output with Aider.", "immediate": False},
+   21: {"cmd": "/test", "args": COMMAND_LITERAL, "desc"
+[WARNING] backend/app/git_utils.py:64 (sonarqube/python:ParsingError) - Parse error at line 64 column 0:
+
+   61: fline in files_res.stdout.splitlines():
+   62:             fparts = fline.split("\t")
+   63:             if len(fparts) >= 2:
+  -->  files.append({"status": fparts[0], "path": fparts[-1]})
+   65:         entries.append(
+[WARNING] backend/app/main.py:52 (sonarqube/python:ParsingError) - Parse error at line 52 column 0:
+
+   48: def get_session(name: str):
+   49:     try:
+   50:         return wsm.get_session(name)
+   51:     except KeyError as exc:
+  -->  raise HTTPException(status_code=404, detail=str(exc))
+   53: 
+   54: 
+   55: 
+   56: class CreateWorkspaceBody(BaseModel):
+   57:     """Represents the body of a create workspace request."""
+   58:     name: str
+   59:
+[WARNING] backend/app/ollama_tools.py:37 (sonarqube/python:ParsingError) - Parse error at line 37 column 13:
+
+   32: (ollama_base: str, model: str, file_content: str, path: str, instruction: str) -> dict:
+   33:     """Sends the file + an instruction to Ollama directly, asking for the
+   34: 
+   35: 
+   36: Return the corrected code window now."""
+  -->      complete resulting file content back (not a diff -- models are much more
+   38:     reliable producing a full file than a hand-rolled patch format). We
+   39:
+[WARNING] backend/app/pylint_runner.py:36 (sonarqube/python:ParsingError) - Parse error at line 36 column 16:
+
+   32: :
+   33:         return {'error': e.stderr}
+   34:     except subprocess.TimeoutExpired:
+   35:         return {'error': 'Pylint timed out'}
+  -->          dict: A dictionary containing the findings, raw output, and any errors.
+   37:     """
+   38:     abs_path = workspace_dir / file_path
+   39:     if not abs_path.is_file()
+[WARNING] backend/app/workspace_fs.py:11 (sonarqube/python:ParsingError) - Parse error at line 11 column 19:
+
+    4: IGNORE_DIRS = {".git", "node_modules", "__pycache__", ".venv", ".aider.tags.cache.v3"}
+    5: 
+    6: 
+    7: def list_ignored_files(workspace_dir: Path) -> set:
+    8:     """Every path git considers ignored in this workspace (per its
+    9:     .gitignore, global excludes, etc.), using `git` itself rather than
+   10:     """
+  -->      reimplementing gitignore pattern matching. Returns an empty set if this
+   12:     isn't a git repo or the command fails for any reason -- filtering is a
+   13:
+[REFACTOR] backend/app/workspace_manager.py:13 (sonarqube/python:S1131) - Remove the useless trailing whitespaces at the end of this line.
+[WARNING] backend/app/workspace_manager.py:62 (sonarqube/python:ParsingError) - Parse error at line 62 column 0:
+
+   58: 
+   59:         session = self._get_or_create_session(name)
+   60: return {"name": name, "status": session.get_status()["status"]}
+   61: 
+  -->      def _get_or_create_session(self, name: str) -> AiderSession:
+   63:         """Get an existing session or create a new one if it doesn't exist."""
+   64:         if name in self.sessions:
+   65:             return self.
+[WARNING] frontend/src/App.jsx:121 (sonarqube/javascript:S2260) - Unexpected token (121:4)
+[WARNING] frontend/src/api.js:25 (sonarqube/javascript:S2260) - Unexpected token (25:2)
+[WARNING] frontend/src/components/CodeCanvas.jsx:24 (sonarqube/javascript:S2260) - Unexpected token (24:2)
+[WARNING] frontend/src/components/CommandPalette.jsx:24 (sonarqube/javascript:S2260) - Unexpected token (24:2)
+[WARNING] frontend/src/components/Composer.jsx:45 (sonarqube/javascript:S2260) - Unexpected token (45:0)
+[WARNING] frontend/src/components/DiffView.jsx:25 (sonarqube/javascript:S2260) - Unexpected token (25:0)
+[WARNING] frontend/src/components/QuestionPrompt.jsx:37 (sonarqube/javascript:S2260) - Unexpected token (37:0)
+[WARNING] frontend/src/components/RenameDownloadModal.jsx:33 (sonarqube/javascript:S2260) - Missing semicolon. (33:6)
+[WARNING] frontend/src/components/SaveFileModal.jsx:31 (sonarqube/javascript:S2260) - Unexpected token (31:2)
+[WARNING] frontend/src/components/Sidebar.jsx:161 (sonarqube/javascript:S2260) - Expected corresponding JSX closing tag for <div>. (161:8)
+[WARNING] backend/app/ollama_client.py:1 (sonarqube/python:S1720) - Add a docstring to this module.
+[WARNING] frontend/src/components/StatusBar.jsx:1 (sonarqube/common-js:InsufficientLineCoverage) - 4 more lines of code need to be covered by tests to reach the minimum threshold of 65.0% lines coverage.
+[WARNING] frontend/src/components/StatusBar.jsx:1 (sonarqube/common-js:InsufficientCommentDensity) - 38 more comment lines need to be written to reach the minimum threshold of 25.0% comment density.
+[ERROR] frontend/src/components/StatusBar.jsx:1 (sonarqube/javascript:S1451) - Add or update the header of this file.
+[REFACTOR] frontend/src/components/StatusBar.jsx:10 (sonarqube/javascript:S1537) - Unexpected trailing comma.
+[WARNING] frontend/src/components/StatusBar.jsx:13 (sonarqube/javascript:S3798) - Define this declaration in a local scope or bind explicitly the property to the global object.
+[ERROR] frontend/src/components/StatusBar.jsx:13 (sonarqube/javascript:S1541) - Function has a complexity of 18 which is greater than 10 authorized.
+[REFACTOR] frontend/src/components/StatusBar.jsx:21 (sonarqube/javascript:S1537) - Unexpected trailing comma.
+[REFACTOR] frontend/src/components/StatusBar.jsx:24 (sonarqube/javascript:S139) - Expected comment to be above code.
+[REFACTOR] frontend/src/components/StatusBar.jsx:41 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[WARNING] frontend/src/components/StatusBar.jsx:50 (sonarqube/javascript:S1774) - Ternary operator used.
+[WARNING] frontend/src/components/StatusBar.jsx:54 (sonarqube/javascript:S1774) - Ternary operator used.
+[WARNING] frontend/src/components/StatusBar.jsx:55 (sonarqube/javascript:S122) - This line has 2 statements. Maximum allowed is 1.
+[WARNING] frontend/src/components/StatusBar.jsx:64 (sonarqube/javascript:S1774) - Ternary operator used.
+[WARNING] frontend/src/components/StatusBar.jsx:74 (sonarqube/javascript:S1774) - Ternary operator used.
+[WARNING] frontend/src/components/StatusBar.jsx:77 (sonarqube/javascript:S1774) - Ternary operator used.
+[WARNING] frontend/src/components/StatusBar.jsx:84 (sonarqube/javascript:S1774) - Ternary operator used.
+[WARNING] frontend/src/components/StatusBar.jsx:84 (sonarqube/javascript:S3358) - Extract this nested ternary operation into an independent statement.
+[WARNING] frontend/src/components/StatusBar.jsx:91 (sonarqube/javascript:S109) - No magic number: 100.
+[WARNING] frontend/src/components/StatusBar.jsx:92 (sonarqube/javascript:S1774) - Ternary operator used.
+[WARNING] frontend/src/components/StatusBar.jsx:93 (sonarqube/javascript:S109) - No magic number: 100.
+[REFACTOR] frontend/src/components/StatusBar.jsx:94 (sonarqube/javascript:S3723) - Missing trailing comma.
+[REFACTOR] frontend/src/components/StatusBar.jsx:95 (sonarqube/javascript:S1537) - Unexpected trailing comma.
+[WARNING] frontend/src/components/StatusBar.jsx:106 (sonarqube/javascript:S6479) - Do not use Array index in keys
+[WARNING] frontend/src/components/SupervisedView.jsx:1 (sonarqube/common-js:InsufficientLineCoverage) - 16 more lines of code need to be covered by tests to reach the minimum threshold of 65.0% lines coverage.
+[WARNING] frontend/src/components/SupervisedView.jsx:1 (sonarqube/common-js:InsufficientCommentDensity) - 63 more comment lines need to be written to reach the minimum threshold of 25.0% comment density.
+[ERROR] frontend/src/components/SupervisedView.jsx:1 (sonarqube/javascript:S1451) - Add or update the header of this file.
+[WARNING] frontend/src/components/SupervisedView.jsx:6 (sonarqube/javascript:S3798) - Define this declaration in a local scope or bind explicitly the property to the global object.
+[WARNING] frontend/src/components/SupervisedView.jsx:7 (sonarqube/javascript:S109) - No magic number: 60.
+[ERROR] frontend/src/components/SupervisedView.jsx:7 (sonarqube/javascript:S121) - Expected { after 'if' condition.
+[WARNING] frontend/src/components/SupervisedView.jsx:8 (sonarqube/javascript:S109) - No magic number: 60.
+[WARNING] frontend/src/components/SupervisedView.jsx:9 (sonarqube/javascript:S109) - No magic number: 60.
+[WARNING] frontend/src/components/SupervisedView.jsx:13 (sonarqube/javascript:S3798) - Define this declaration in a local scope or bind explicitly the property to the global object.
+[ERROR] frontend/src/components/SupervisedView.jsx:13 (sonarqube/javascript:S1541) - Function has a complexity of 25 which is greater than 10 authorized.
+[REFACTOR] frontend/src/components/SupervisedView.jsx:29 (sonarqube/javascript:S1537) - Unexpected trailing comma.
+[ERROR] frontend/src/components/SupervisedView.jsx:36 (sonarqube/javascript:S121) - Expected { after 'if' condition.
+[ERROR] frontend/src/components/SupervisedView.jsx:40 (sonarqube/javascript:S121) - Expected { after 'if' condition.
+[REFACTOR] frontend/src/components/SupervisedView.jsx:44 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[ERROR] frontend/src/components/SupervisedView.jsx:46 (sonarqube/javascript:S121) - Expected { after 'if' condition.
+[ERROR] frontend/src/components/SupervisedView.jsx:47 (sonarqube/javascript:S121) - Expected { after 'else'.
+[ERROR] frontend/src/components/SupervisedView.jsx:54 (sonarqube/javascript:S121) - Expected { after 'if' condition.
+[WARNING] frontend/src/components/SupervisedView.jsx:60 (sonarqube/javascript:S1774) - Ternary operator used.
+[REFACTOR] frontend/src/components/SupervisedView.jsx:60 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[REFACTOR] frontend/src/components/SupervisedView.jsx:83 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[WARNING] frontend/src/components/SupervisedView.jsx:84 (sonarqube/javascript:S1774) - Ternary operator used.
+[REFACTOR] frontend/src/components/SupervisedView.jsx:95 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[WARNING] frontend/src/components/SupervisedView.jsx:116 (sonarqube/javascript:S6479) - Do not use Array index in keys
+[WARNING] frontend/src/components/SupervisedView.jsx:140 (sonarqube/javascript:S6479) - Do not use Array index in keys
+[WARNING] frontend/src/components/SupervisedView.jsx:140 (sonarqube/javascript:S1774) - Ternary operator used.
+[WARNING] frontend/src/components/SupervisedView.jsx:170 (sonarqube/javascript:S1774) - Ternary operator used.
+[REFACTOR] frontend/src/components/SupervisedView.jsx:175 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[WARNING] frontend/src/components/TerminalView.jsx:1 (sonarqube/common-js:InsufficientLineCoverage) - 17 more lines of code need to be covered by tests to reach the minimum threshold of 65.0% lines coverage.
+[WARNING] frontend/src/components/TerminalView.jsx:1 (sonarqube/common-js:InsufficientCommentDensity) - 9 more comment lines need to be written to reach the minimum threshold of 25.0% comment density.
+[ERROR] frontend/src/components/TerminalView.jsx:1 (sonarqube/javascript:S1451) - Add or update the header of this file.
+[WARNING] frontend/src/components/TerminalView.jsx:14 (sonarqube/javascript:S3798) - Define this declaration in a local scope or bind explicitly the property to the global object.
+[REFACTOR] frontend/src/components/TerminalView.jsx:39 (sonarqube/javascript:S1537) - Unexpected trailing comma.
+[REFACTOR] frontend/src/components/TerminalView.jsx:40 (sonarqube/javascript:S1537) - Unexpected trailing comma.
+[ERROR] frontend/src/components/TerminalView.jsx:54 (sonarqube/javascript:S121) - Expected { after 'for-of'.
+[REFACTOR] frontend/src/components/TerminalView.jsx:58 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[WARNING] frontend/src/components/Toasts.jsx:1 (sonarqube/common-js:InsufficientLineCoverage) - 2 more lines of code need to be covered by tests to reach the minimum threshold of 65.0% lines coverage.
+[WARNING] frontend/src/components/Toasts.jsx:1 (sonarqube/common-js:InsufficientCommentDensity) - 5 more comment lines need to be written to reach the minimum threshold of 25.0% comment density.
+[ERROR] frontend/src/components/Toasts.jsx:1 (sonarqube/javascript:S1451) - Add or update the header of this file.
+[WARNING] frontend/src/components/Toasts.jsx:5 (sonarqube/javascript:S3798) - Define this declaration in a local scope or bind explicitly the property to the global object.
+[REFACTOR] frontend/src/components/Toasts.jsx:8 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[WARNING] frontend/src/components/WorkspaceBar.jsx:1 (sonarqube/common-js:InsufficientLineCoverage) - 9 more lines of code need to be covered by tests to reach the minimum threshold of 65.0% lines coverage.
+[WARNING] frontend/src/components/WorkspaceBar.jsx:1 (sonarqube/common-js:InsufficientCommentDensity) - 18 more comment lines need to be written to reach the minimum threshold of 25.0% comment density.
+[ERROR] frontend/src/components/WorkspaceBar.jsx:1 (sonarqube/javascript:S1451) - Add or update the header of this file.
+[WARNING] frontend/src/components/WorkspaceBar.jsx:3 (sonarqube/javascript:S3798) - Define this declaration in a local scope or bind explicitly the property to the global object.
+[ERROR] frontend/src/components/WorkspaceBar.jsx:11 (sonarqube/javascript:S121) - Expected { after 'if' condition.
+[REFACTOR] frontend/src/components/WorkspaceBar.jsx:28 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[REFACTOR] frontend/src/components/WorkspaceBar.jsx:32 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[REFACTOR] frontend/src/components/WorkspaceBar.jsx:36 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[WARNING] frontend/src/components/WorkspaceBar.jsx:37 (sonarqube/javascript:S1774) - Ternary operator used.
+[REFACTOR] frontend/src/components/WorkspaceBar.jsx:46 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[WARNING] frontend/src/main.jsx:1 (sonarqube/common-js:InsufficientLineCoverage) - 1 more lines of code need to be covered by tests to reach the minimum threshold of 65.0% lines coverage.
+[WARNING] frontend/src/main.jsx:1 (sonarqube/common-js:InsufficientCommentDensity) - 3 more comment lines need to be written to reach the minimum threshold of 25.0% comment density.
+[ERROR] frontend/src/main.jsx:1 (sonarqube/javascript:S1451) - Add or update the header of this file.
+[REFACTOR] frontend/src/main.jsx:9 (sonarqube/javascript:S3723) - Missing trailing comma.
+[WARNING] frontend/src/useAiderSocket.js:1 (sonarqube/common-js:InsufficientLineCoverage) - 18 more lines of code need to be covered by tests to reach the minimum threshold of 65.0% lines coverage.
+[WARNING] frontend/src/useAiderSocket.js:1 (sonarqube/common-js:InsufficientCommentDensity) - 7 more comment lines need to be written to reach the minimum threshold of 25.0% comment density.
+[ERROR] frontend/src/useAiderSocket.js:1 (sonarqube/javascript:S1451) - Add or update the header of this file.
+[WARNING] frontend/src/useAiderSocket.js:10 (sonarqube/javascript:S3798) - Define this declaration in a local scope or bind explicitly the property to the global object.
+[ERROR] frontend/src/useAiderSocket.js:15 (sonarqube/javascript:S121) - Expected { after 'if' condition.
+[WARNING] frontend/src/useAiderSocket.js:22 (sonarqube/javascript:S1774) - Ternary operator used.
+[WARNING] frontend/src/useAiderSocket.js:24 (sonarqube/javascript:S1774) - Ternary operator used.
+[ERROR] frontend/src/useAiderSocket.js:30 (sonarqube/javascript:S121) - Expected { after 'if' condition.
+[WARNING] frontend/src/useAiderSocket.js:30 (sonarqube/javascript:S109) - No magic number: 2000.
+[REFACTOR] frontend/src/useAiderSocket.js:35 (sonarqube/javascript:S3524) - Remove parentheses around the parameter of this arrow function.
+[WARNING] frontend/vite.config.js:1 (sonarqube/common-js:InsufficientCommentDensity) - 1 more comment lines need to be written to reach the minimum threshold of 25.0% comment density.
+[ERROR] frontend/vite.config.js:1 (sonarqube/javascript:S1451) - Add or update the header of this file.
+[REFACTOR] frontend/vite.config.js:14 (sonarqube/javascript:S1537) - Unexpected trailing comma.
+[REFACTOR] frontend/vite.config.js:15 (sonarqube/javascript:S1537) - Unexpected trailing comma.
+[REFACTOR] frontend/vite.config.js:18 (sonarqube/javascript:S1537) - Unexpected trailing comma.
+[REFACTOR] frontend/vite.config.js:19 (sonarqube/javascript:S1537) - Unexpected trailing comma.

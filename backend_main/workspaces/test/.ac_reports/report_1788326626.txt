@@ -1,0 +1,63 @@
+Static Code Analysis Report
+============================
+
+Files analyzed: chess.py
+Total findings: 26
+
+--- AI Summary ------------------------------------------------------------
+Summary Report for chess.py
+----------------------------
+
+### Severity: ERROR
+- **ImportError**: Unable to import 'streamlit' (line 1). This suggests a missing dependency or incorrect import path.
+- **ImportSelf**: Module import itself (line 2). This is likely a mistake and should be corrected.
+- **NoMember**: Multiple instances where the 'chess' module is missing specific members (lines 9, 14, 29, 63, 66, 75, 82). This indicates either incorrect usage of the module or missing functionality that needs to be addressed.
+
+### Severity: WARNING
+- **RedefinedOuterName**: Redefining name 'piece' from outer scope (line 20). This can lead to confusion and bugs.
+
+### Severity: CONVENTION
+- **TrailingWhitespace**: Multiple lines with trailing whitespace (lines 32, 35, 39, 43, 44, 48, 52, 67). This does not affect functionality but is a common style violation.
+- **MissingModuleDocstring**: Missing module docstring (line 1). Adding a module docstring improves code readability and maintainability.
+- **MissingFunctionDocstring**: Missing function or method docstring (lines 13, 20). Adding docstrings to functions enhances code clarity.
+- **InvalidName**: Constant names not following UPPER_CASE naming style (lines 34, 38, 41, 75, 82). This is a style violation that affects code consistency.
+
+### Recurring Patterns
+- The most recurring pattern is the presence of trailing whitespace, which appears in multiple lines. Additionally, there are multiple instances of the `chess` module missing members, suggesting a potential issue with the module or its usage.
+- Docstring issues occur both for the module and functions, indicating a lack of documentation, which is a recurring problem.
+
+### Action List (Prioritized)
+1. **Fix ImportError and ImportSelf**: Resolve the import issues first to ensure the module can be run without runtime errors.
+2. **Address NoMember Errors**: Investigate and correct the usage of the 'chess' module to include the necessary members.
+3. **Resolve RedefinedOuterName Warning**: Correct the redefinition of 'piece' to avoid scope issues.
+4. **Remove Trailing Whitespace**: Clean up trailing whitespace for better code readability.
+5. **Add Module and Function Docstrings**: Include docstrings to improve the maintainability of the code.
+6. **Correct InvalidName Conventions**: Rename constants to follow the UPPER_CASE naming style for consistency.
+
+--- Raw Findings ----------------------------------------------------------
+[CONVENTION] chess.py:32 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:35 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:39 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:43 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:44 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:48 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:52 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:67 (pylint/trailing-whitespace) - Trailing whitespace
+[CONVENTION] chess.py:1 (pylint/missing-module-docstring) - Missing module docstring
+[ERROR] chess.py:1 (pylint/import-error) - Unable to import 'streamlit'
+[WARNING] chess.py:2 (pylint/import-self) - Module import itself
+[ERROR] chess.py:9 (pylint/no-member) - Module 'chess' has no 'Board' member
+[CONVENTION] chess.py:13 (pylint/missing-function-docstring) - Missing function or method docstring
+[ERROR] chess.py:14 (pylint/no-member) - Module 'chess' has no 'Board' member
+[CONVENTION] chess.py:20 (pylint/missing-function-docstring) - Missing function or method docstring
+[WARNING] chess.py:20 (pylint/redefined-outer-name) - Redefining name 'piece' from outer scope (line 31)
+[ERROR] chess.py:29 (pylint/no-member) - Module 'chess' has no 'square' member
+[CONVENTION] chess.py:34 (pylint/invalid-name) - Constant name "bg_color" doesn't conform to UPPER_CASE naming style
+[CONVENTION] chess.py:38 (pylint/invalid-name) - Constant name "bg_color" doesn't conform to UPPER_CASE naming style
+[CONVENTION] chess.py:41 (pylint/invalid-name) - Constant name "btn_key" doesn't conform to UPPER_CASE naming style
+[ERROR] chess.py:63 (pylint/no-member) - Module 'chess' has no 'Move' member; maybe 'move'?
+[ERROR] chess.py:66 (pylint/no-member) - Module 'chess' has no 'QUEEN' member
+[CONVENTION] chess.py:75 (pylint/invalid-name) - Constant name "winner" doesn't conform to UPPER_CASE naming style
+[ERROR] chess.py:75 (pylint/no-member) - Module 'chess' has no 'WHITE' member
+[CONVENTION] chess.py:82 (pylint/invalid-name) - Constant name "turn_text" doesn't conform to UPPER_CASE naming style
+[ERROR] chess.py:82 (pylint/no-member) - Module 'chess' has no 'WHITE' member
