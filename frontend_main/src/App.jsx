@@ -12,6 +12,7 @@ import { listFiles } from './api/client'
 import { deleteWorkspaceFile, extractErrorMessage } from './api/client'
 import FileHistoryModal from './components/FileHistoryModal'
 import WorkspaceManager from './components/WorkspaceManager'
+import CoaiderPanel from './components/CoaiderPanel'
 
 const TABS = [
   { id: 'workspace', label: 'Workspace'},
@@ -92,6 +93,11 @@ export default function App() {
             </div>
             <div data-testid="tab-panel-workspace" style={{ display: tab === 'workspace' ? 'block' : 'none' }}>
               <WorkspaceManager workspace={workspace} files={files} refreshFiles={refreshFiles} />
+            </div>
+            <div data-testid="tab-panel-coaider" style={{ display: tab === 'coaider' ? 'block' : 'none' }}>
+              <ErrorBoundary label="Coaider">
+                <CoaiderPanel workspace={workspace} attached={attached} onFilesChanged={refreshFiles} />
+              </ErrorBoundary>
             </div>
             <div data-testid="tab-panel-modularize" style={{ display: tab === 'modularize' ? 'block' : 'none' }}>
               <ErrorBoundary label="Modularization">
