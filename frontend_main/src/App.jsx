@@ -13,6 +13,7 @@ import { deleteWorkspaceFile, extractErrorMessage } from './api/client'
 import FileHistoryModal from './components/FileHistoryModal'
 import WorkspaceManager from './components/WorkspaceManager'
 import CoaiderPanel from './components/CoaiderPanel'
+import WorkspacePicker from './components/WorkspacePicker'
 
 const TABS = [
   { id: 'workspace', label: 'Workspace'},
@@ -25,7 +26,7 @@ const TABS = [
 ]
 
 export default function App() {
-  const [workspace, setWorkspace] = useState('test')
+  const [workspace, setWorkspace] = useState('')
   const [workspaces, setWorkspaces] = useState([])
   const [files, setFiles] = useState([])
   const [attached, setAttached] = useState([])
@@ -41,7 +42,6 @@ export default function App() {
       const { data } = await api.get('/workspaces')
       const next = data.workspaces || []
       setWorkspaces(next)
-      if (next.length && !next.some(item => item.name === workspace)) setWorkspace(next[0].name)
       return next
     } catch {
       return []
@@ -71,8 +71,8 @@ export default function App() {
 
   return (
     <JobsProvider>
-      <div className="app-shell">
-        <ErrorBoundary label="Sidebar">
+      <div className={`app-shell ${tab === 'coaider' ? 'coaider-active' : ''}`}>
+        {tab !== 'coaider' && <ErrorBoundary label="Sidebar">
           <Sidebar
             workspace={workspace}
             setWorkspace={setWorkspace}
@@ -89,7 +89,7 @@ export default function App() {
               catch (e) { window.alert(extractErrorMessage(e)) }
             }}
           />
-        </ErrorBoundary>
+        </ErrorBoundary>}
         <div className="main">
           <div className="topbar">
             <div className="tab-group">
@@ -106,7 +106,7 @@ export default function App() {
             <div className="spacer" />
             <span className="badge">{workspace}</span>
           </div>
-          <div className="content">
+          <div className={`content ${tab === 'coaider' ? 'coaider-content' : ''}`}>
             
             <div data-testid="tab-panel-analysis" style={{ display: tab === 'analysis' ? 'block' : 'none' }}>
               <ErrorBoundary label="Static Analysis">
@@ -150,6 +150,7 @@ export default function App() {
           <JobsTray />
         </ErrorBoundary>
         <FileHistoryModal workspace={workspace} filename={historyFile} onClose={() => setHistoryFile(null)} />
+        {!workspace && <WorkspacePicker workspaces={workspaces} onSelect={setWorkspace} onCreate={createWorkspace} />}
       </div>
     </JobsProvider>
   )

@@ -165,6 +165,13 @@ body { background: var(--bg-app); color: var(--text-main); }
   overflow-x: hidden;
   padding: 20px 24px;
 }
+.content.coaider-content { padding: 0; overflow: hidden; }
+.coaider-active .main { width: 100%; }
+.workspace-picker-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(17, 18, 30, .55); }
+.workspace-picker { width: min(520px, 100%); padding: 28px; border-radius: 14px; background: #fff; box-shadow: 0 18px 60px rgba(0, 0, 0, .25); }
+.workspace-picker h1 { margin: 12px 0 6px; font-size: 22px; }
+.workspace-picker p { margin: 0 0 20px; color: var(--text-muted); font-size: 13px; }
+.workspace-picker-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
 
 /* --------------------------------------------------------------- panels */
 .panel {
