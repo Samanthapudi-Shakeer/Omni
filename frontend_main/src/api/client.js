@@ -106,6 +106,11 @@ export const getDefaultTestGenPrompt = () =>
 export const startTestGenSession = (workspace, files, prompt) =>
   api.post('/testgen/start', { workspace, files, prompt }).then(r => r.data)
 
+// Coaider uses the same active workspace and interactive PTY transport as
+// the other main-console features, while keeping its Aider process isolated.
+export const startCoaiderSession = (workspace, files, prompt) =>
+  api.post('/coaider/start', { workspace, files, prompt }).then(r => r.data)
+
 // ------------------------------------------------------------------ translate
 export const getTranslateLanguages = () =>
   api.get('/translate/languages').then(r => r.data)

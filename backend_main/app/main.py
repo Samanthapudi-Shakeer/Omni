@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import workspace, analysis, modularize, jobs, testgen, translate, pty
+from app.routers import workspace, analysis, modularize, jobs, testgen, translate, pty, coaider
 
 app = FastAPI(title="Aider Console API", version="0.1.0")
 
@@ -22,6 +22,7 @@ app.include_router(jobs.router)
 app.include_router(testgen.router)
 app.include_router(translate.router)
 app.include_router(pty.router)
+app.include_router(coaider.router)
 
 
 @app.get("/api/health")
