@@ -1,0 +1,12 @@
+# JavaScript dependencies and generated bundles
+**/node_modules/
+**/.vite/
+**/dist/
+
+# Python bytecode and local environments
+**/__pycache__/
+*.py[cod]
+.venv/
+
+# Local workspace/session data
+backend_main/workspaces/

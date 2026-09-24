@@ -178,6 +178,12 @@ body { background: var(--bg-app); color: var(--text-main); }
 }
 .panel h3 { margin: 0 0 4px; font-size: 14px; }
 .panel .hint { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.coaider-panel { max-width: 1100px; }
+.coaider-attached { display: flex; flex-direction: column; gap: 5px; margin: 14px 0; font-size: 12px; }
+.coaider-attached span { color: var(--text-muted); overflow-wrap: anywhere; }
+.field-label { display: block; margin: 12px 0 6px; font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: .04em; text-transform: uppercase; }
+.coaider-actions { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+.coaider-result { margin-top: 12px; color: var(--ok); font-size: 13px; overflow-wrap: anywhere; }
 
 /* Reusable responsive 2-column layout (language pickers, model pickers,
    etc). Collapses to a single column on narrow viewports instead of

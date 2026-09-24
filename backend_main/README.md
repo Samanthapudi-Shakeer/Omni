@@ -2,7 +2,7 @@
 
 ## 1. Install Python deps
 ```bash
-cd backend
+cd backend_main
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```

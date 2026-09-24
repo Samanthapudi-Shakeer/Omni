@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import workspace, analysis, modularize, jobs, testgen, translate, pty
+from app.routers import workspace, analysis, modularize, jobs, testgen, translate, pty, coaider
+from app.coaider.router import legacy_app as coaider_app
 
 app = FastAPI(title="Aider Console API", version="0.1.0")
 
@@ -22,6 +23,12 @@ app.include_router(jobs.router)
 app.include_router(testgen.router)
 app.include_router(translate.router)
 app.include_router(pty.router)
+app.include_router(coaider.router)
+
+# The complete Coaider Console API lives in the same FastAPI process.  Its
+# routes retain their original /api/ws and /ws contracts so the embedded
+# console can use every native Aider function without a second backend.
+app.router.routes.extend(coaider_app.router.routes)
 
 
 @app.get("/api/health")

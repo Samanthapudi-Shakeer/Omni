@@ -8,10 +8,11 @@ import DiffKitPanel from './components/DiffKitPanel'
 import ErrorBoundary from './components/ErrorBoundary'
 import JobsTray from './components/JobsTray'
 import { JobsProvider } from './context/JobsContext'
-import { listFiles } from './api/client'
+import api, { listFiles } from './api/client'
 import { deleteWorkspaceFile, extractErrorMessage } from './api/client'
 import FileHistoryModal from './components/FileHistoryModal'
 import WorkspaceManager from './components/WorkspaceManager'
+import CoaiderPanel from './components/CoaiderPanel'
 
 const TABS = [
   { id: 'workspace', label: 'Workspace'},
@@ -25,6 +26,7 @@ const TABS = [
 
 export default function App() {
   const [workspace, setWorkspace] = useState('test')
+  const [workspaces, setWorkspaces] = useState([])
   const [files, setFiles] = useState([])
   const [attached, setAttached] = useState([])
   const [tab, setTab] = useState('analysis')
@@ -33,6 +35,26 @@ export default function App() {
   const refreshFiles = useCallback(() => {
     listFiles(workspace).then(setFiles).catch(() => setFiles([]))
   }, [workspace])
+
+  const refreshWorkspaces = useCallback(async () => {
+    try {
+      const { data } = await api.get('/workspaces')
+      const next = data.workspaces || []
+      setWorkspaces(next)
+      if (next.length && !next.some(item => item.name === workspace)) setWorkspace(next[0].name)
+      return next
+    } catch {
+      return []
+    }
+  }, [workspace])
+
+  const createWorkspace = useCallback(async (name) => {
+    const { data } = await api.post('/workspaces', { name })
+    await refreshWorkspaces()
+    setWorkspace(data.name)
+  }, [refreshWorkspaces])
+
+  useEffect(() => { refreshWorkspaces() }, [refreshWorkspaces])
 
   useEffect(() => {
     refreshFiles()
@@ -54,6 +76,7 @@ export default function App() {
           <Sidebar
             workspace={workspace}
             setWorkspace={setWorkspace}
+            workspaces={workspaces}
             files={files}
             refreshFiles={refreshFiles}
             attached={attached}
@@ -92,6 +115,11 @@ export default function App() {
             </div>
             <div data-testid="tab-panel-workspace" style={{ display: tab === 'workspace' ? 'block' : 'none' }}>
               <WorkspaceManager workspace={workspace} files={files} refreshFiles={refreshFiles} />
+            </div>
+            <div data-testid="tab-panel-coaider" style={{ display: tab === 'coaider' ? 'block' : 'none' }}>
+              <ErrorBoundary label="Coaider">
+                <CoaiderPanel workspaces={workspaces} workspace={workspace} setWorkspace={setWorkspace} createWorkspace={createWorkspace} />
+              </ErrorBoundary>
             </div>
             <div data-testid="tab-panel-modularize" style={{ display: tab === 'modularize' ? 'block' : 'none' }}>
               <ErrorBoundary label="Modularization">
