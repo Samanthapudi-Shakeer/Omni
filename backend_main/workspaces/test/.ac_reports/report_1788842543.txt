@@ -1,9 +1,0 @@
-Static Code Analysis Report
-============================
-
-Files analyzed: CBlocks2.cpp
-
-No issues found. Nice and clean!
-
---- Tool Errors ----------------------------------------------------------
-CBlocks2.cpp: 'oclint' was not found on PATH. Install it or set the corresponding AC_*_BIN env var to point at it.
