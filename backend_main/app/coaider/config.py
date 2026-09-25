@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     port: int = 8080
     # Root directory under which each named workspace gets its own
     # subdirectory + its own independent Aider session/process.
-    workspaces_root: str = "./workspaces"
+    workspaces_root: str = str(Path(__file__).resolve().parents[2] / "workspaces")
     aider_bin: str = "aider"
     ollama_api_base: str = "http://127.0.0.1:11434"
     default_model: str = "ollama/qwen2.5-coder:32b"
@@ -29,4 +29,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

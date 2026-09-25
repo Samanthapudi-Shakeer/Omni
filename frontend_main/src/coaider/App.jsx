@@ -34,7 +34,7 @@ function b64ToUint8(b64) {
   return arr;
 }
 
-export default function App({ workspaces, currentWorkspace, onSelectWorkspace, onCreateWorkspace }) {
+export default function CoaiderConsole({ workspaces, currentWorkspace, onSelectWorkspace, onCreateWorkspace }) {
   const [aider, setAider] = useState(DEFAULT_AIDER);
   const [ollamaConnected, setOllamaConnected] = useState(false);
   const [ollamaError, setOllamaError] = useState(null);

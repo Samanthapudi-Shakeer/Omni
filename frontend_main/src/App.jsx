@@ -8,10 +8,12 @@ import DiffKitPanel from './components/DiffKitPanel'
 import ErrorBoundary from './components/ErrorBoundary'
 import JobsTray from './components/JobsTray'
 import { JobsProvider } from './context/JobsContext'
-import { listFiles } from './api/client'
+import api, { listFiles } from './api/client'
 import { deleteWorkspaceFile, extractErrorMessage } from './api/client'
 import FileHistoryModal from './components/FileHistoryModal'
 import WorkspaceManager from './components/WorkspaceManager'
+import CoaiderPanel from './components/CoaiderPanel'
+import WorkspacePicker from './components/WorkspacePicker'
 
 const TABS = [
   { id: 'workspace', label: 'Workspace'},
@@ -24,7 +26,8 @@ const TABS = [
 ]
 
 export default function App() {
-  const [workspace, setWorkspace] = useState('test')
+  const [workspace, setWorkspace] = useState('')
+  const [workspaces, setWorkspaces] = useState([])
   const [files, setFiles] = useState([])
   const [attached, setAttached] = useState([])
   const [tab, setTab] = useState('analysis')
@@ -33,6 +36,25 @@ export default function App() {
   const refreshFiles = useCallback(() => {
     listFiles(workspace).then(setFiles).catch(() => setFiles([]))
   }, [workspace])
+
+  const refreshWorkspaces = useCallback(async () => {
+    try {
+      const { data } = await api.get('/workspaces')
+      const next = data.workspaces || []
+      setWorkspaces(next)
+      return next
+    } catch {
+      return []
+    }
+  }, [workspace])
+
+  const createWorkspace = useCallback(async (name) => {
+    const { data } = await api.post('/workspaces', { name })
+    await refreshWorkspaces()
+    setWorkspace(data.name)
+  }, [refreshWorkspaces])
+
+  useEffect(() => { refreshWorkspaces() }, [refreshWorkspaces])
 
   useEffect(() => {
     refreshFiles()
@@ -49,11 +71,12 @@ export default function App() {
 
   return (
     <JobsProvider>
-      <div className="app-shell">
-        <ErrorBoundary label="Sidebar">
+      <div className={`app-shell ${tab === 'coaider' ? 'coaider-active' : ''}`}>
+        {tab !== 'coaider' && <ErrorBoundary label="Sidebar">
           <Sidebar
             workspace={workspace}
             setWorkspace={setWorkspace}
+            workspaces={workspaces}
             files={files}
             refreshFiles={refreshFiles}
             attached={attached}
@@ -66,7 +89,7 @@ export default function App() {
               catch (e) { window.alert(extractErrorMessage(e)) }
             }}
           />
-        </ErrorBoundary>
+        </ErrorBoundary>}
         <div className="main">
           <div className="topbar">
             <div className="tab-group">
@@ -83,7 +106,7 @@ export default function App() {
             <div className="spacer" />
             <span className="badge">{workspace}</span>
           </div>
-          <div className="content">
+          <div className={`content ${tab === 'coaider' ? 'coaider-content' : ''}`}>
             
             <div data-testid="tab-panel-analysis" style={{ display: tab === 'analysis' ? 'block' : 'none' }}>
               <ErrorBoundary label="Static Analysis">
@@ -92,6 +115,11 @@ export default function App() {
             </div>
             <div data-testid="tab-panel-workspace" style={{ display: tab === 'workspace' ? 'block' : 'none' }}>
               <WorkspaceManager workspace={workspace} files={files} refreshFiles={refreshFiles} />
+            </div>
+            <div data-testid="tab-panel-coaider" style={{ display: tab === 'coaider' ? 'block' : 'none' }}>
+              <ErrorBoundary label="Coaider">
+                <CoaiderPanel workspaces={workspaces} workspace={workspace} setWorkspace={setWorkspace} createWorkspace={createWorkspace} />
+              </ErrorBoundary>
             </div>
             <div data-testid="tab-panel-modularize" style={{ display: tab === 'modularize' ? 'block' : 'none' }}>
               <ErrorBoundary label="Modularization">
@@ -122,6 +150,7 @@ export default function App() {
           <JobsTray />
         </ErrorBoundary>
         <FileHistoryModal workspace={workspace} filename={historyFile} onClose={() => setHistoryFile(null)} />
+        {!workspace && <WorkspacePicker workspaces={workspaces} onSelect={setWorkspace} onCreate={createWorkspace} />}
       </div>
     </JobsProvider>
   )

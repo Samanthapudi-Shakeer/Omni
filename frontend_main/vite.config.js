@@ -41,6 +41,12 @@ export default defineConfig({
           })
         },
       },
+      // The embedded Coaider console receives raw Aider terminal output on
+      // this socket. It is served by backend_main alongside the /api routes.
+      '/ws': {
+        target: process.env.VITE_API_TARGET || 'http://localhost:8080',
+        ws: true,
+      },
     },
   },
   test: {
