@@ -25,24 +25,37 @@ By default the backend talks to `http://localhost:11434` and uses model
 Override with `OLLAMA_BASE_URL` / `OLLAMA_MODEL` if needed. `aider` itself
 is invoked with `--model ollama/<OLLAMA_MODEL>` (see `AIDER_MODEL`).
 
-Static analysis automatically uses SonarQube when `SONAR_URL` and either
-`SONAR_TOKEN` or `SONAR_USERNAME`/`SONAR_PASSWORD` are configured. Set
-`SONAR_SCANNER` when `sonar-scanner` is not on `PATH`. Without those settings
-the existing per-file linters are used as a local fallback.
+Static analysis automatically detects selected C/C++ files (including headers)
+and sends them to the C/C++ SonarQube configuration. Python and other files use
+the Python configuration. Set `SONAR_SCANNER` when `sonar-scanner` is not on
+`PATH`.
 
 SonarQube credentials have no source-controlled defaults. Configure a
 user-generated token (preferred) before starting the backend:
 
 ```bash
-export SONAR_TOKEN='your-sonarqube-user-token'
+export SONAR_PYTHON_URL='https://sonar-python.example.com'
+export SONAR_PYTHON_TOKEN='your-python-sonarqube-user-token'
 ```
 
 Username/password authentication is also supported when required:
 
 ```bash
-export SONAR_USERNAME='your-sonarqube-username'
-export SONAR_PASSWORD='your-sonarqube-password'
+export SONAR_PYTHON_USERNAME='your-python-sonarqube-username'
+export SONAR_PYTHON_PASSWORD='your-python-sonarqube-password'
 ```
+
+Configure the separate C/C++ endpoint (commonly the same host on port 9000)
+with its own credentials:
+
+```bash
+export SONAR_C_CPP_URL='https://sonar-native.example.com:9000'
+export SONAR_C_CPP_TOKEN='your-c-cpp-sonarqube-user-token'
+# Or: SONAR_C_CPP_USERNAME and SONAR_C_CPP_PASSWORD
+```
+
+The legacy `SONAR_URL`, `SONAR_TOKEN`, `SONAR_USERNAME`, and
+`SONAR_PASSWORD` variables remain supported as Python configuration aliases.
 
 If credentials are missing, SonarQube analysis returns a configuration error
 instead of attempting an unauthenticated scan. Rotate any credentials that
@@ -53,8 +66,8 @@ does not accept ZIP files directly: the backend creates a ZIP for the selected
 files, extracts it into a temporary staging directory, and invokes the
 SonarScanner CLI there. Install the scanner on the backend host and either put
 `sonar-scanner` on `PATH` or set `SONAR_SCANNER` to its absolute executable
-path. `SONAR_URL`, `SONAR_TOKEN` (preferred), or the username/password pair
-must also be set.
+path. Configure the matching `SONAR_PYTHON_*` or `SONAR_C_CPP_*` URL and
+credentials for the file type being scanned.
 
 ## 3. Run
 ```bash

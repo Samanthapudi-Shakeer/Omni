@@ -22,20 +22,39 @@ REPORTS_DIRNAME = ".ac_reports"
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11435").rstrip("/")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:32b")
 
-# SonarQube analysis is used automatically when all required settings are
-# present.  Local linters remain the fallback for installations without
-# SonarQube or sonar-scanner.
-SONAR_URL = os.environ.get("SONAR_URL", "http://172.28.80.108:9000").rstrip("/")
+# SonarQube endpoints are selected automatically from the uploaded source
+# files.  Keep the Python and native C/C++ credentials independent: many
+# installations expose language-specific SonarQube instances, with the native
+# instance commonly listening on port 9000.  The legacy SONAR_* names remain
+# Python fallbacks so existing deployments continue to work during migration.
+SONAR_PYTHON_URL = os.environ.get(
+    "SONAR_PYTHON_URL", os.environ.get("SONAR_URL", "")
+).rstrip("/")
+SONAR_PYTHON_TOKEN = os.environ.get(
+    "SONAR_PYTHON_TOKEN", os.environ.get("SONAR_TOKEN", "")
+).strip()
+SONAR_PYTHON_USERNAME = os.environ.get(
+    "SONAR_PYTHON_USERNAME", os.environ.get("SONAR_USERNAME", "")
+).strip()
+SONAR_PYTHON_PASSWORD = os.environ.get(
+    "SONAR_PYTHON_PASSWORD", os.environ.get("SONAR_PASSWORD", "")
+).strip()
+
+SONAR_C_CPP_URL = os.environ.get("SONAR_C_CPP_URL", "").rstrip("/")
+SONAR_C_CPP_TOKEN = os.environ.get("SONAR_C_CPP_TOKEN", "").strip()
+SONAR_C_CPP_USERNAME = os.environ.get("SONAR_C_CPP_USERNAME", "").strip()
+SONAR_C_CPP_PASSWORD = os.environ.get("SONAR_C_CPP_PASSWORD", "").strip()
+
+# Compatibility aliases for integrations that only ever scan Python files.
+SONAR_URL = SONAR_PYTHON_URL
+SONAR_TOKEN = SONAR_PYTHON_TOKEN
+SONAR_USERNAME = SONAR_PYTHON_USERNAME
+SONAR_PASSWORD = SONAR_PYTHON_PASSWORD
 SONAR_SCANNER = os.environ.get(
     "SONAR_SCANNER",
     "/home/test7/sonar-scanner/bin/sonar-scanner",
 )
 JAVA_EXE = os.environ.get("JAVA_EXE", "/usr/bin/java")
-# Credentials must be supplied through the environment; never keep secrets in
-# source-controlled defaults.
-SONAR_TOKEN = os.environ.get("SONAR_TOKEN", "squ_db7a728e10ce96cab4886416b6559f8ad0c5002e").strip()
-SONAR_USERNAME = os.environ.get("SONAR_USERNAME", "PJ_FactoryAI").strip()
-SONAR_PASSWORD = os.environ.get("SONAR_PASSWORD", "factoryai_567").strip()
 SONAR_TIMEOUT_SECONDS = int(os.environ.get("AC_SONAR_TIMEOUT", "300"))
 
 # --- aider --------------------------------------------------------------
