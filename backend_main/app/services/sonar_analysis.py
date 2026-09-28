@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import time
 import zipfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -25,10 +26,46 @@ _SEVERITY = {
 }
 
 
-def configured() -> bool:
-    return bool(config.SONAR_URL and (config.SONAR_TOKEN or (
-        config.SONAR_USERNAME and config.SONAR_PASSWORD
-    )))
+_C_CPP_SUFFIXES = {".c", ".cc", ".cp", ".cpp", ".cxx", ".c++", ".h", ".hh", ".hpp", ".hxx"}
+
+
+@dataclass(frozen=True)
+class SonarProfile:
+    """Connection settings for the SonarQube instance serving one language family."""
+
+    name: str
+    url: str
+    token: str
+    username: str
+    password: str
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.url and (self.token or (self.username and self.password)))
+
+
+def profile_for_files(files: list[str]) -> SonarProfile:
+    """Choose the native endpoint whenever the selected source is C or C++.
+
+    File type remains automatic: callers supply paths only and never choose a
+    SonarQube URL or credential set in the UI.  Header files are treated as
+    native as well because they commonly accompany C/C++ source selections.
+    """
+    native = any(Path(filename).suffix.lower() in _C_CPP_SUFFIXES for filename in files)
+    if native:
+        return SonarProfile(
+            "C/C++", config.SONAR_C_CPP_URL, config.SONAR_C_CPP_TOKEN,
+            config.SONAR_C_CPP_USERNAME, config.SONAR_C_CPP_PASSWORD,
+        )
+    return SonarProfile(
+        "Python", config.SONAR_PYTHON_URL, config.SONAR_PYTHON_TOKEN,
+        config.SONAR_PYTHON_USERNAME, config.SONAR_PYTHON_PASSWORD,
+    )
+
+
+def configured(files: list[str] | None = None) -> bool:
+    """Report whether the automatically selected endpoint is ready to scan."""
+    return profile_for_files(files or []).is_configured
 
 
 def _project_key(workspace: str) -> str:
@@ -36,16 +73,16 @@ def _project_key(workspace: str) -> str:
     return (key or "aider-console-workspace")[:200]
 
 
-def _auth() -> tuple[str, str]:
-    if config.SONAR_TOKEN:
-        return config.SONAR_TOKEN, ""
-    return config.SONAR_USERNAME, config.SONAR_PASSWORD
+def _auth(profile: SonarProfile) -> tuple[str, str]:
+    if profile.token:
+        return profile.token, ""
+    return profile.username, profile.password
 
 
-def _ensure_project(project_key: str, workspace: str) -> None:
+def _ensure_project(project_key: str, workspace: str, profile: SonarProfile) -> None:
     response = requests.post(
-        f"{config.SONAR_URL}/api/projects/create",
-        auth=_auth(),
+        f"{profile.url}/api/projects/create",
+        auth=_auth(profile),
         data={"project": project_key, "name": workspace},
         timeout=20,
     )
@@ -73,13 +110,13 @@ def _task_id(project_root: Path, output: str) -> str | None:
     return None
 
 
-def _wait_for_task(task_id: str) -> None:
+def _wait_for_task(task_id: str, profile: SonarProfile) -> None:
     deadline = time.monotonic() + config.SONAR_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
         response = requests.get(
-            f"{config.SONAR_URL}/api/ce/task",
+            f"{profile.url}/api/ce/task",
             params={"id": task_id},
-            auth=_auth(),
+            auth=_auth(profile),
             timeout=20,
         )
         response.raise_for_status()
@@ -92,19 +129,19 @@ def _wait_for_task(task_id: str) -> None:
     raise TimeoutError("Timed out waiting for SonarQube analysis")
 
 
-def _issues(project_key: str) -> list[dict[str, Any]]:
+def _issues(project_key: str, profile: SonarProfile) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     page = 1
     while True:
         response = requests.get(
-            f"{config.SONAR_URL}/api/issues/search",
+            f"{profile.url}/api/issues/search",
             params={
                 "componentKeys": project_key,
                 "resolved": "false",
                 "ps": 100,
                 "p": page,
             },
-            auth=_auth(),
+            auth=_auth(profile),
             timeout=30,
         )
         response.raise_for_status()
@@ -154,10 +191,12 @@ def _find_java() -> str | None:
 def analyze_workspace(
     workspace: str, project_root: Path, files: list[str]
 ) -> list[dict[str, Any]]:
-    if not configured():
+    profile = profile_for_files(files)
+    if not profile.is_configured:
         raise RuntimeError(
-            "SonarQube is not configured; set SONAR_URL and SONAR_TOKEN "
-            "(or SONAR_USERNAME/SONAR_PASSWORD)"
+            f"SonarQube {profile.name} is not configured; set "
+            f"SONAR_{'C_CPP' if profile.name == 'C/C++' else 'PYTHON'}_URL and "
+            "the matching TOKEN or USERNAME/PASSWORD"
         )
 
     scanner = shutil.which(config.SONAR_SCANNER)
@@ -174,7 +213,7 @@ def analyze_workspace(
         raise RuntimeError("Java executable was not found. Install Java or configure JAVA_HOME.")
 
     project_key = _project_key(workspace)
-    _ensure_project(project_key, workspace)
+    _ensure_project(project_key, workspace, profile)
 
     with tempfile.TemporaryDirectory(prefix="aider-sonar-") as temp_dir:
         staging = Path(temp_dir) / "project"
@@ -190,7 +229,7 @@ def analyze_workspace(
 
         command = [
             scanner,
-            f"-Dsonar.host.url={config.SONAR_URL}",
+            f"-Dsonar.host.url={profile.url}",
             f"-Dsonar.projectKey={project_key}",
             "-Dsonar.sources=.",
             f"-Dsonar.inclusions={','.join(Path(f).as_posix() for f in files)}",
@@ -202,16 +241,16 @@ def analyze_workspace(
             "-Dsonar.scanner.responseTimeout=120",
             "-Dsonar.verbose=true",
         ]
-        if config.SONAR_TOKEN:
-            command.append(f"-Dsonar.login={config.SONAR_TOKEN}")
+        if profile.token:
+            command.append(f"-Dsonar.login={profile.token}")
         else:
             command.extend([
-                f"-Dsonar.login={config.SONAR_USERNAME}",
-                f"-Dsonar.password={config.SONAR_PASSWORD}",
+                f"-Dsonar.login={profile.username}",
+                f"-Dsonar.password={profile.password}",
             ])
 
         env = os.environ.copy()
-        env["SONAR_HOST_URL"] = config.SONAR_URL
+        env["SONAR_HOST_URL"] = profile.url
         env["SONAR_SCANNER_SKIP_JRE_PROVISIONING"] = "true"
         env["SONAR_SCANNER_JAVA_EXE_PATH"] = java_exe
 
@@ -230,11 +269,11 @@ def analyze_workspace(
         task_id = _task_id(staging, output)
         if not task_id:
             raise RuntimeError("SonarScanner completed without a Compute Engine task id")
-        _wait_for_task(task_id)
+        _wait_for_task(task_id, profile)
 
     normalized = []
     allowed = {Path(filename).as_posix() for filename in files}
-    for issue in _issues(project_key):
+    for issue in _issues(project_key, profile):
         filename = issue.get("component", "").split(":", 1)[-1].lstrip("/\\")
         if filename not in allowed:
             continue

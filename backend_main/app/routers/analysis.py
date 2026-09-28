@@ -56,8 +56,10 @@ async def run_analysis(req: RunAnalysisRequest):
                 project_name = f"{zip_name}_{uploaded_date}"
         except (OSError, json.JSONDecodeError):
             pass
-    if not sonar_analysis.configured():
-        raise HTTPException(503, "SonarQube is not configured. Set SONAR_URL and SONAR_TOKEN.")
+    sonar_profile = sonar_analysis.profile_for_files(files)
+    if not sonar_profile.is_configured:
+        profile_env = "SONAR_C_CPP" if sonar_profile.name == "C/C++" else "SONAR_PYTHON"
+        raise HTTPException(503, f"SonarQube {sonar_profile.name} is not configured. Set {profile_env}_URL and credentials.")
     try:
         raw_issues = sonar_analysis.analyze_workspace(project_name, ws, files)
         for ri in raw_issues:
@@ -88,7 +90,7 @@ async def run_analysis(req: RunAnalysisRequest):
 
     project_key = sonar_analysis._project_key(project_name)
     dashboard_url = (
-        f"{config.SONAR_URL}/dashboard?id={quote(project_key, safe='')}"
+        f"{sonar_profile.url}/dashboard?id={quote(project_key, safe='')}"
     )
     return RunAnalysisResponse(
         issues=all_issues,
